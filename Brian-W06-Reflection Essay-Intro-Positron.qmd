@@ -22,55 +22,55 @@ I downloaded and installed Positron and explored its interface while following t
 
 Creating a dedicated project folder and working within that folder helped me understand the importance of file management in data analysis and reproducible research. I also learned that Positron automatically creates a hidden `.posit` folder that stores project settings, making it easy to reopen the same project later.
 
----
+------------------------------------------------------------------------
 
 ## Prompt 2: Based on what you learned from Step 1 and Step 3, what do you like about Positron compared with RStudio?
 
 After working with Positron, I found several features that I like compared with RStudio.
 
-* The interface feels modern and clean.
-* It is designed to support multiple programming languages and workflows.
-* The AI integration is built into the environment, making coding assistance more accessible.
-* The project organization is straightforward and similar to other modern development environments.
+- The interface feels modern and clean.
+- It is designed to support multiple programming languages and workflows.
+- The AI integration is built into the environment, making coding assistance more accessible.
+- The project organization is straightforward and similar to other modern development environments.
 
 Although I have limited experience with RStudio, Positron appears to be more flexible for future projects that may involve R, Python, Quarto, and AI-assisted coding. I also appreciate that Quarto documents can be edited in both visual and source modes.
 
 > One feature I especially like is the combination of a modern code editor with built-in AI tools that can help explain code, generate examples, and troubleshoot errors.
 
----
+------------------------------------------------------------------------
 
 ## Prompt 3: In Step 4, the video demonstrates how you can use AI. Describe the various ways you can use AI inside Positron. Some are free while others are not.
 
 AI can be used inside Positron in several different ways.
 
-* Generating code snippets.
-* Explaining existing code.
-* Debugging errors.
-* Writing comments and documentation.
-* Assisting with Quarto reports.
-* Suggesting data visualization approaches.
-* Helping users learn programming concepts.
+- Generating code snippets.
+- Explaining existing code.
+- Debugging errors.
+- Writing comments and documentation.
+- Assisting with Quarto reports.
+- Suggesting data visualization approaches.
+- Helping users learn programming concepts.
 
 Some AI services require paid subscriptions, while others provide free access or educational discounts. AI can improve productivity by reducing repetitive tasks and helping users understand unfamiliar concepts more quickly.
 
-::: {.callout-note}
-
+::: callout-note
 ## Reflection
 
 AI should be viewed as a learning assistant rather than a replacement for understanding the material. Reviewing and testing AI-generated code is still important.
-
 :::
-
 
 ## Prompt 4: Which AI tools have you installed or set up? Which AI tools did you find beneficial for you?
 
-I explored the AI features available in Positron and learned about GitHub Copilot. I also used ChatGPT as a learning tool to better understand Quarto formatting, GitHub workflows, and coding concepts.
-At this point, I find ChatGPT especially beneficial because it can explain technical concepts step by step and help troubleshoot problems. For someone who is still learning GitHub and Quarto, this guidance is valuable.
+I explored the AI features available in Positron and learned about GitHub Copilot. I also used ChatGPT as a learning tool to better understand Quarto formatting, GitHub workflows, and coding concepts. At this point, I find ChatGPT especially beneficial because it can explain technical concepts step by step and help troubleshoot problems. For someone who is still learning GitHub and Quarto, this guidance is valuable.
 
 ## Prompt 5: I strongly recommend using GitHub Copilot, which is free if you apply for an education account. Apply for it and take a screenshot showing you were accepted into the education program. Play with it and do you find it helpful or distracting? Please elaborate.
 
-I applied for the GitHub Education program because GitHub Copilot is offered free to eligible students. However, my application was not accepted, so I was unable to access the educational benefits and could not fully test GitHub Copilot through that program.
-Even though I was not accepted, I learned about the potential advantages of AI coding assistants. I believe tools like GitHub Copilot can be very helpful because they suggest code, reduce repetitive typing, and assist with debugging. At the same time, they can become distracting if users rely on them without understanding the code they generate.
-For my own learning, I think AI tools are most beneficial when they are used to explain concepts and provide guidance rather than simply producing complete solutions.
+I applied for the GitHub Education program because GitHub Copilot is offered free to eligible students. However, my application was not accepted, so I was unable to access the educational benefits and could not fully test GitHub Copilot through that program. Even though I was not accepted, I learned about the potential advantages of AI coding assistants. I believe tools like GitHub Copilot can be very helpful because they suggest code, reduce repetitive typing, and assist with debugging. At the same time, they can become distracting if users rely on them without understanding the code they generate. For my own learning, I think AI tools are most beneficial when they are used to explain concepts and provide guidance rather than simply producing complete solutions.
 
+## Prompt 6: Publish this report to GitHub Pages and provide a URL to the GitHub Pages for the report.
 
+I created a GitHub repository for this assignment and learned how to upload my Quarto files. I also published the report using GitHub Pages.
+
+GitHub Pages URL:
+
+[**https://brianvuong1.github.io/r-project-git/**](https://brianvuong1.github.io/r-project-git/)
