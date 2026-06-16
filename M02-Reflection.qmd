@@ -1,0 +1,194 @@
+---
+title: "M02-Introduction to Data Science in R-Reflection"
+author: "Brian Vuong"
+format: 
+  html: 
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    code-link: true
+    embed-resources: true
+    output-file: m02-reflection.html
+editor: visual
+execute: 
+  freeze: auto
+---
+
+# Introduction
+
+This report reflects on reproducible data science, Quarto, and the Tidyverse ecosystem. It also discusses how these tools apply to digital marketing and modern data workflows.
+
+# Reproducibility Crisis
+
+## Overview of the Crisis
+
+The video on the reproducibility crisis explained that many scientific studies cannot be replicated when other researchers attempt to follow the same methods. This issue is common in fields such as psychology, medicine, and economics.
+
+Key causes include:
+
+- Lack of transparency in methods
+- Small sample sizes
+- Selective reporting of results
+- Data analysis errors
+
+> Reproducibility ensures that research findings can be independently verified and trusted.
+
+## Why It Matters (Marketing Context)
+
+In digital marketing, reproducibility is important because campaign reports often vary depending on:
+
+- Filters used
+- Date ranges selected
+- Data cleaning methods
+- Attribution models
+
+Without proper documentation, two analysts may produce completely different results from the same data set.
+
+::: callout-warning
+## Key Issue
+
+Inconsistent reporting methods can lead to misleading marketing decisions and poor business strategy.
+:::
+
+# Reproducible Data Science and Literate Coding
+
+Reproducible data science ensures that others can follow the same steps and achieve the same results. Literate coding combines code, explanations, and outputs into a single document.
+
+Benefits include:
+
+- Improves transparency
+- Reduces errors
+- Enhances collaboration
+- Makes analysis easier to audit
+
+::: callout-note
+## Important Insight
+
+Literate programming turns analysis into a readable narrative, not just code execution.
+:::
+
+# Quarto and Reproducibility
+
+Quarto is a powerful tool that allows users to combine text, code, and outputs in one reproducible document.
+
+## Features I Found Impressive
+
+- Cross-language support (R and Python)
+- Automatic report generation
+- Interactive outputs
+- Professional HTML formatting
+
+## Personal Use Case
+
+I can see myself using Quarto for:
+
+- Class notes
+- Marketing reports
+- Data analysis assignments
+- Presentation preparation
+
+::: callout-tip
+## Practical Application
+
+Quarto can automate reporting workflows in digital marketing by combining data, analysis, and visualization in one reproducible document.
+:::
+
+# Tidyverse Ecosystem {#sec-tidyverse}
+
+The Tidyverse is a collection of R packages designed for data science workflows.
+
+## Key Packages
+
+- dplyr → data manipulation\
+- ggplot2 → visualization\
+- tidyr → data reshaping\
+- readr → data import\
+- tibble → modern data frames
+
+## What R Can Do
+
+R can be used for:
+
+- Data cleaning
+- Statistical analysis
+- Data visualization
+- Reporting
+- Predictive modeling
+
+## Example Table
+
+| Tool    | Purpose             |
+|---------|---------------------|
+| dplyr   | Data transformation |
+| ggplot2 | Visualization       |
+| tidyr   | Data reshaping      |
+| readr   | Data import         |
+
+As discussed in @sec-tidyverse, the Tidyverse simplifies the entire data analysis workflow.
+
+# Panel Comparison: R vs Python vs Quarto {.panel-tabset}
+
+## R
+
+- Best for statistics
+- Strong visualization tools
+- Academic research focus
+
+## Python
+
+- Best for automation
+- Machine learning capabilities
+- Broad general-purpose use
+
+## Quarto
+
+- Combines code + narrative
+- Supports multiple languages
+- Creates reproducible reports
+
+# Two Useful Packages for My Career
+
+## Shiny
+
+Allows users to build interactive web dashboards directly from R.
+
+Benefits:
+
+- Interactive marketing dashboards
+- Real-time KPI tracking
+- No coding required for users
+
+## Plotly
+
+Enables interactive charts and visualizations.
+
+Benefits:
+
+- Better presentations
+- Interactive exploration
+- Strong storytelling with data
+
+# R vs Python Debate
+
+The R vs Python debate is often framed as competition, but both languages are important.
+
+- R: statistics and visualization\
+- Python: automation and machine learning
+
+Quarto allows both languages to be used in the same document, making collaboration easier.
+
+::: callout-note
+## Key Insight
+
+The future of data science is not about choosing R or Python, but combining them effectively.
+:::
+
+# Conclusion
+
+This module helped me understand reproducibility in data science and how Quarto supports transparent workflows. I also learned how the Tidyverse simplifies analysis and how tools like Shiny and Plotly enhance professional reporting in digital marketing.
+
+------------------------------------------------------------------------
+
+Reproducible workflows improve scientific trust and reduce reporting errors.[^1]
+
+[^1]: This is especially important in data-driven decision making.
