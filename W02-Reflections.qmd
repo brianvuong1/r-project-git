@@ -1,0 +1,333 @@
+---
+title: "W02: Reflection on Fundamentals of Machine Learning"
+subtitle: "Reflections and Hands-On Lab"
+author: "Brian V"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: right-body
+    toc-float: true
+    number-sections: true
+    theme: cosmo
+    code-fold: false
+    code-tools: true
+    link-external-newwindow: true
+    df-print: paged
+    embed-resources: true
+    output-file: w02-reflection.html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+---
+title: "M03 - Machine Learning with Tidymodels Reflection"
+author: "Your Name"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    self-contained: true
+---
+
+# Introduction
+
+This report summarizes key ideas from **tidymodels**, machine learning fundamentals, and applied regression modeling. It also reflects on workflow design, evaluation techniques, and modern MLOps practices.
+
+------------------------------------------------------------------------
+
+# 1. Tidymodels Overview
+
+The video presentation introduced the **tidymodels ecosystem** as a modern, consistent framework for machine learning in R. It emphasizes a unified grammar for modeling, making workflows more structured and reproducible compared to older approaches.
+
+> Machine learning is not just about algorithms—it is about building repeatable, structured workflows that reduce human error.
+
+## Key Ideas (Summary List)
+
+- Unified modeling framework
+- Separation of preprocessing and modeling
+- Tidy data principles
+- Workflow standardization
+
+------------------------------------------------------------------------
+
+## What I Learned About Tidymodels
+
+Tidymodels provides a modular approach to machine learning where each step is clearly defined:
+
+- Data preprocessing (recipes)
+- Model specification
+- Workflow assembly
+- Model tuning and evaluation
+
+### Strengths
+
+- Consistent syntax across models
+- Strong integration with the Tidyverse
+- Encourages reproducibility
+- Easy cross-validation workflows
+
+### Weaknesses
+
+- Slight learning curve
+- More verbose than simpler tools
+- Can feel complex for beginners
+
+------------------------------------------------------------------------
+
+## Tidymodels vs Caret
+
+Caret is an older unified modeling package, while tidymodels is a modern redesign.
+
+## Comparison {.panel-tabset}
+
+### Tidymodels
+
+- Modern tidyverse design
+- Modular workflow system
+- Actively maintained
+- Better extensibility
+
+### Caret
+
+- Older framework
+- Less modular design
+- Simpler for quick models
+- Less flexible for advanced pipelines
+
+------------------------------------------------------------------------
+
+# 2. Machine Learning Workflow with Tidymodels
+
+The typical workflow includes:
+
+## Steps
+
+1.  Split data into training/testing sets
+2.  Create recipe (preprocessing steps)
+3.  Specify model (linear regression, etc.)
+4.  Build workflow
+5.  Fit model
+6.  Evaluate performance
+
+::: callout-note
+## Key Insight
+
+Tidymodels separates *what you want to do* from *how you do it*, making workflows easier to debug and reproduce.
+:::
+
+------------------------------------------------------------------------
+
+# 3. MLOps and Vetiver
+
+## What is MLOps?
+
+MLOps (Machine Learning Operations) refers to practices that deploy, monitor, and maintain machine learning models in production environments.
+
+It includes:
+
+- Model deployment
+- Version control
+- Monitoring performance
+- Updating models over time
+
+------------------------------------------------------------------------
+
+## Vetiver Package
+
+The :contentReference[oaicite:0]{index="0"} package supports MLOps by:
+
+- Deploying models as APIs
+- Tracking model versions
+- Integrating with production systems
+- Supporting reproducible deployment pipelines
+
+::: callout-tip
+## Practical Value
+
+Vetiver bridges the gap between model building and real-world deployment.
+:::
+
+------------------------------------------------------------------------
+
+# 4. Machine Learning Fundamentals (StatQuest Videos)
+
+## 4.1 Cross Validation
+
+Cross-validation is a technique for evaluating model performance by splitting data into multiple folds.
+
+- Reduces overfitting
+- Provides stable performance estimates
+
+------------------------------------------------------------------------
+
+## 4.2 Confusion Matrix
+
+A confusion matrix compares predicted vs actual values:
+
+- True Positives
+- False Positives
+- True Negatives
+- False Negatives
+
+------------------------------------------------------------------------
+
+## 4.3 Sensitivity and Specificity
+
+- Sensitivity: ability to detect positives correctly\
+- Specificity: ability to detect negatives correctly
+
+------------------------------------------------------------------------
+
+## 4.4 Bias and Variance
+
+- Bias: error from overly simple models\
+- Variance: error from overly complex models
+
+> A good model balances both bias and variance to avoid underfitting and overfitting.
+
+------------------------------------------------------------------------
+
+## 4.5 Why These Concepts Matter
+
+- They help evaluate model reliability
+- They guide model selection
+- They improve generalization
+
+------------------------------------------------------------------------
+
+## Summary Table
+
+| Concept          | Meaning                | Importance           |
+|------------------|------------------------|----------------------|
+| Cross Validation | Resampling method      | Prevents overfitting |
+| Confusion Matrix | Classification results | Evaluates accuracy   |
+| Sensitivity      | True positive rate     | Detects positives    |
+| Specificity      | True negative rate     | Detects negatives    |
+| Bias/Variance    | Error tradeoff         | Model tuning         |
+
+------------------------------------------------------------------------
+
+# 5. Base R Modeling (Car Example)
+
+We model the effect of car weight on mpg.
+
+## Model Interpretation
+
+The regression shows how weight influences fuel efficiency.
+
+### Model diagnostics:
+
+- Use `tidy()` for coefficients
+- Use `glance()` for overall metrics
+- Use `augment()` for row-level predictions
+
+------------------------------------------------------------------------
+
+## Residual Analysis
+
+Residual plots help assess model assumptions.
+
+- Ideal pattern: random scatter
+- Problematic pattern: curves or funnels
+
+::: callout-warning
+## Interpretation Insight
+
+If residuals show structure, the model may violate assumptions such as homoskedasticity.
+:::
+
+------------------------------------------------------------------------
+
+## Model Extensions
+
+Adding `hp` and `cyl`:
+
+- R² usually increases
+- Model becomes more explanatory
+- Residuals may improve or worsen depending on multicollinearity
+
+------------------------------------------------------------------------
+
+# 6. Marketing Data Model
+
+We model:
+
+`monthly_spend ~ tenure + num_products + region`
+
+## Interpretation
+
+At α = 0.05:
+
+- Significant variables influence spending behavior
+- Non-significant variables may not contribute meaningfully
+
+## tidy() vs summary()
+
+- `tidy()` → clean coefficient table\
+- `summary()` → full statistical output
+
+------------------------------------------------------------------------
+
+## Model Quality
+
+Using `glance()`:
+
+- R² shows explained variance
+- AIC/BIC help compare models
+- High R² ≠ always good model
+
+------------------------------------------------------------------------
+
+## Residual Analysis
+
+Residual plots help detect:
+
+- Heteroskedasticity
+- Non-linear relationships
+
+------------------------------------------------------------------------
+
+## Extended Model
+
+Adding:
+
+- `num_complaints`
+- `last_login_days`
+
+### Observations:
+
+- R² increases
+- Not all variables remain significant
+
+> This suggests simulated data may include correlated predictors or built-in relationships.
+
+------------------------------------------------------------------------
+
+::: callout-note
+## Key Insight
+
+Higher R² does not guarantee a better model—it may indicate overfitting or redundant predictors.
+:::
+
+------------------------------------------------------------------------
+
+# Conclusion
+
+This module demonstrated how tidymodels provides a modern framework for machine learning, emphasizing reproducibility and workflow clarity. Combined with MLOps tools like vetiver and foundational ML concepts such as cross-validation and bias-variance tradeoffs, it creates a complete end-to-end data science pipeline.
+
+------------------------------------------------------------------------
+
+## Footnote
+
+Machine learning performance should always be evaluated using both statistical metrics and real-world interpretability.[^1]
+
+[^1]: A model that performs well statistically may still fail in production if not properly validated.
