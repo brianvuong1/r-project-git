@@ -1,0 +1,119 @@
+---
+title: "Brian Vuong Field Trip and Perceptual Map Assignment"
+author: "Brian Vuong"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    code-link: true
+    embed-resources: true
+editor: visual
+execute: 
+  freeze: auto
+---
+
+## Competitor Analysis
+
+The Cal Poly Pomona Farm Store operates in a unique position between a traditional grocery store and a local farm market[cite: 10]. Its primary competitors include Trader Joe's, Sprouts Farmers Market, Whole Foods Market, and local farmers markets throughout the Pomona and Los Angeles areas[cite: 11].
+
+## Product Assortment Strategy
+
+**Product Categories:**
+The Farm Store offers a variety of agricultural and food products, including: fresh fruits and vegetables [cite: 15], citrus products [cite: 16], honey [cite: 17], jams and preserves [cite: 18], sauces and dressings [cite: 19], dairy products [cite: 20], meat products [cite: 21], bakery items [cite: 22], seasonal agricultural products [cite: 23], and Cal Poly Pomona branded products[cite: 24].
+
+**Width & Depth of Product Lines:**
+The store carries multiple product categories but does not have the extensive assortment of a full-service grocery store[cite: 26]. The assortment focuses primarily on locally produced and agriculture-related products[cite: 27]. Product depth is moderate; customers may find several varieties of certain goods, but not the hundreds of options available at large supermarkets[cite: 29].
+
+**Unique Brands and Products:**
+One distinguishing feature is the availability of Cal Poly Pomona-produced products, including CPP Honey, Orange Juice, Jam and Preserves, and other items produced through university agricultural programs[cite: 32, 33, 34, 35]. These products are difficult to find elsewhere and contribute significantly to the store's differentiation[cite: 36].
+
+**Comparison with Competitors:**
+Compared to Trader Joe's and Sprouts, the Farm Store offers fewer total products[cite: 39]. However, it offers more locally sourced and university-produced items, making its assortment more specialized and agriculture-focused[cite: 40, 41]. 
+
+## Pricing Strategy
+
+The Farm Store's pricing appears competitive with specialty grocery stores[cite: 44]. While prices are generally higher than conventional supermarkets, they are similar to or slightly lower than Whole Foods for specialty local products[cite: 45, 46]. Customers appear willing to pay a premium for freshness, local production, and supporting university agriculture programs[cite: 48].
+
+## Service Analysis & Store Atmosphere
+
+Employees are knowledgeable about product origins and agricultural production, making the service feel more educational and community-oriented[cite: 51, 52]. The shopping experience is less transactional and more focused on supporting local agriculture compared to large competitors that emphasize speed[cite: 53, 54]. 
+
+The store creates a welcoming farm-market atmosphere through rustic design elements, agricultural displays, educational signage, and a clean layout[cite: 57, 58, 59, 60, 61]. The environment reinforces the connection between the university's agricultural programs and the products being sold[cite: 69].
+
+## Customer Motivations (Jobs to Be Done)
+
+Customers likely visit the Farm Store to:
+1. Purchase fresh locally grown products[cite: 72].
+2. Support Cal Poly Pomona agriculture programs[cite: 73].
+3. Access unique university-produced products[cite: 74].
+4. Experience a farm-market shopping environment[cite: 75].
+5. Purchase gifts and specialty food items[cite: 76].
+6. Learn about local agriculture and food production[cite: 77].
+
+---
+
+## Perceptual Map Analysis
+
+```{r}
+#| label: perceptual-map
+#| fig-cap: "Figure 1. Perceptual map positioning five retail competitors on two dimensions: product uniqueness (x-axis) and local & agricultural authenticity (y-axis). Scores are perceptual estimates based on market research; axes scaled 0-100."
+#| fig-width: 8
+#| fig-height: 6
+
+library(ggplot2)
+
+# Approximate coordinates based on the 0-100 perceptual map visual
+map_data <- data.frame(
+  Store = c("Cal Poly Pomona\nFarm Store", "Local Farmers Markets", 
+            "Sprouts Farmers Market", "Whole Foods", "Trader Joe's"),
+  Uniqueness = c(90, 35, 55, 75, 85),
+  Authenticity = c(90, 85, 65, 45, 30),
+  Type = c("Cal Poly Pomona Farm Store", "Competitor", 
+           "Competitor", "Competitor", "Competitor")
+)
+
+# Generate the plot
+ggplot(map_data, aes(x = Uniqueness, y = Authenticity, color = Type)) +
+  # Add quadrant midpoints
+  geom_hline(yintercept = 50, linetype = "dashed", color = "lightgray") +
+  geom_vline(xintercept = 50, linetype = "dashed", color = "lightgray") +
+  
+  # Add points with different sizes based on type
+  geom_point(aes(size = Type), alpha = 0.9) +
+  scale_size_manual(values = c("Cal Poly Pomona Farm Store" = 7, "Competitor" = 4)) +
+  
+  # Match the colors from the document
+  scale_color_manual(values = c("Cal Poly Pomona Farm Store" = "#D95F02", 
+                                "Competitor" = "#7570B3")) +
+  
+  # Add text labels slightly offset from points
+  geom_text(aes(label = Store), vjust = -1.5, size = 3.5, color = "black", fontface = "bold") +
+  
+  # Format axes to show Low/High exactly like the chart
+  scale_x_continuous(limits = c(0, 100), breaks = c(0, 100), labels = c("Low", "High")) +
+  scale_y_continuous(limits = c(0, 100), breaks = c(0, 100), labels = c("Low", "High")) +
+  
+  # Labels and theming
+  labs(
+    x = "PRODUCT UNIQUENESS",
+    y = "LOCAL & AGRICULTURAL AUTHENTICITY"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(color = "gray30", size = 10),
+    axis.title = element_text(color = "gray30", size = 10, fontface = "bold"),
+    axis.line = element_line(color = "gray80")
+  )
+
+
+```
+
+
+
+
