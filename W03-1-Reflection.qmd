@@ -1,0 +1,305 @@
+---
+title: "W03-1: Reflection on Regression and Ch5 (Spending Our Data)"
+author: "Your Name"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-expand: 1
+    toc-location: right-body
+    toc-title: "Contents"
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+    highlight-style: github
+    df-print: paged
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  freeze: true
+---
+
+## 1. Regression Fundamentals (Step 1-1)
+
+**Prompt:** What is the goal of linear regression and why do we call it linear regression? What is residual? When statistical software determines the best-fitting line for a set of data points, it uses an algorithm specified by the developers. How does it do it? Elaborate on the algorithm.
+
+The primary goal of linear regression is to model the relationship between a dependent variable and one or more independent predictors, allowing us to understand this relationship and make future predictions. We call it "linear" because the model assumes the relationship can be represented by a linear combination of the parameters (a straight line in two dimensions, a plane in three, etc.). 
+
+A **residual** is the difference between an observed value in your dataset and the value predicted by your regression line. 
+
+To find the "best-fitting" line, statistical software relies on an algorithm called **Ordinary Least Squares (OLS)**. OLS calculates the line by minimizing the sum of the squared residuals. It squares the residuals to ensure negative and positive errors don't cancel each other out and to heavily penalize larger errors. Through calculus (specifically taking the derivative of the sum of squared errors with respect to the slope and intercept and setting it to zero), the algorithm arrives at the exact coefficients that produce the smallest possible sum of squared errors.
+
+---
+
+## 2. Meaning of R-Squared (Step 1-2)
+
+**Prompt:** What is R-Squared? How do you calculate R-squared? What is the variation around the mean? What is the variation around the regression line? What is variation around the mean - variation around the line? What is the relationship between R and R-Squared?
+
+::: {.panel-tabset}
+
+### Definitions
+* **R-Squared:** Also known as the coefficient of determination, this metric represents the proportion of the variance in the dependent variable that is predictable from the independent variable(s). 
+* **Variation around the mean:** This is the Total Sum of Squares ($SST$). It represents the total variance in the dependent variable if we only used the mean to predict it, ignoring any independent variables.
+* **Variation around the regression line:** This is the Sum of Squared Errors or Residuals ($SSR$). It represents the variation in the dependent variable that is *not* explained by our model.
+* **Variation around the mean - variation around the line:** This results in the Explained Sum of Squares ($SSE$). It is the amount of variation that our regression model successfully "explains."
+
+### Formulas & Relationships
+You can calculate R-squared using the following formula:
+$$R^2 = 1 - \frac{SSR}{SST}$$
+
+Regarding the relationship between R and R-Squared: In the context of a simple linear regression (one independent variable), R-Squared is literally the square of $r$ (the Pearson correlation coefficient between the two variables).
+
+:::
+
+---
+
+## 3. Implementing and Interpreting Linear Regression (Step 1-3)
+
+**Prompt:** What does the t-test do in the output? What does the F-test do in the output? Let's suppose you ran a simple regression... slope coefficient has a t-value of 1.97 with a p-value of 0.048. What is your conclusion? What would be the F-statistic? What would be your conclusion about the overall model's significance?
+
+* **t-test:** Tests the null hypothesis that a specific independent variable's coefficient is equal to zero (meaning it has no effect on the dependent variable), while holding other variables constant.
+* **F-test:** Tests the null hypothesis that *all* of the regression coefficients are equal to zero simultaneously (meaning the model as a whole has no predictive value beyond just guessing the mean).
+
+**Scenario Evaluation:**
+With a t-value of 1.97 and a p-value of 0.048 (assuming a standard alpha level of 0.05), we reject the null hypothesis. **Conclusion:** The independent variable is statistically significant.
+
+In a simple linear regression, the F-statistic is the square of the t-statistic for the predictor variable. Therefore, the F-statistic would be:
+$$F = 1.97^2 \approx 3.8809$$
+
+Because this is a simple regression, the overall model's p-value will match the independent variable's p-value (0.048). **Conclusion:** The overall model is statistically significant.
+
+---
+
+## 4. Multiple Regression (Step 2-1)
+
+**Prompt:** How is multiple regression an extension of simple linear regression? Explain what changes... Why is adjusted R-Squared often preferred... Explain what else we need to consider... What does it mean if adding tail length increases R2, but the model comparison F-test is not statistically significant? Is it possible to observe that t-tests for a few independent variables are statistically significant but that the overall model is not significant? If a multiple regression model has a statistically significant F-test, does that mean every independent variable in the model is important?
+
+Multiple regression extends simple linear regression by allowing for two or more independent variables to predict the dependent variable. Instead of fitting a line, we are now fitting a plane (or a hyperplane). The interpretation of the slope also changes: a coefficient now represents the effect of that independent variable on the dependent variable *while holding all other variables constant*.
+
+> "The adjusted R-squared is trying to protect us from the illusion of model improvement caused by simply throwing more variables at the problem."
+
+**Why Adjusted R-Squared?**
+Regular $R^2$ will mathematically always increase (or stay exactly the same) when you add a new variable, even if it is completely random noise. Adjusted $R^2$ penalizes the score for adding unnecessary variables. You cannot simply say a model with a higher regular $R^2$ is better because it may be **overfitting** the data. You must also consider theoretical justification, out-of-sample error, and the adjusted $R^2$.
+
+**Interpreting Tests:**
+* **Increased $R^2$ but non-significant F-test:** If adding a variable (like tail length) increases $R^2$ but the change isn't significant in an F-test, it means the added explanatory power is so tiny it is indistinguishable from random chance.
+* **Significant t-tests but non-significant F-test:** This is rare but mathematically possible, often due to severe multicollinearity or a large number of predictors. The null hypothesis for a t-test ($\beta_1 = 0$) tests just one variable. The null hypothesis for the F-test ($\beta_1 = \beta_2 = ... = 0$) tests the whole model. If variables are highly correlated, individual tests might flag as significant while the collective signal gets diluted.
+* **Significant F-test implies every variable is important?** No. A significant F-test simply means *at least one* predictor in the model is statistically significant. It does not guarantee they all are.
+
+---
+
+## 5. Setting Up and Running Models in R (Step 2-2)
+
+**Prompt:** Before fitting a regression model, why is it useful to plot the variables? Explain the difference between simple regression and multiple regression using the mouse example. Why should adjusted R-Squared be considered... If adding tail length does not significantly improve the model, what does that imply...
+
+Plotting variables prior to modeling is crucial to visually verify the assumption of linearity, spot extreme outliers that could skew the OLS line, and identify potential heteroscedasticity. 
+
+**The Mouse Example:**
+In simple regression, we might predict a mouse's weight based purely on its overall size. In multiple regression, we introduce further granularity—predicting the mouse's weight based on its size *and* its tail length.
+
+As noted previously, adjusted R-squared is vital here to ensure we aren't just rewarding the model for complexity. If adding "tail length" to our mouse model doesn't significantly improve it, this implies two things for business/science:
+1. **Model Selection:** We should drop the variable and favor the simpler, more parsimonious model.
+2. **Data Collection:** We can stop spending time and resources measuring mouse tails in the future, saving money!
+
+---
+
+## 6. Key Regression Model Assumptions (Step 3)
+
+### Assumption Analysis: Advertising Scenario
+
+**Prompt:** Suppose a company studies whether advertising spending increases sales... What assumption is most likely an issue here? For the rest of the assumptions, provide a case where each can be an issue...
+
+::: {.callout-note title="Omitted Variable Bias"}
+If we model sales purely on advertising but ignore seasonality (e.g., the holiday rush), our model suffers from **Omitted Variable Bias** (violating the assumption that errors are independent of the predictors). The model will incorrectly attribute the holiday sales spike entirely to the ad budget.
+:::
+
+**Other Assumptions in the Ad/Sales Scenario:**
+
+* **Linearity:** The model assumes the relationship is a straight line. However, advertising likely has diminishing returns. Spending an extra \$10,000 when you are already spending \$1 million will not have the same impact as spending your first \$10,000.
+* **Homoscedasticity (Constant Variance):** This assumes errors are consistent across all levels of spending. In reality, at low ad spends, sales might be consistently low (small variance). At massive ad spends, sales could be astronomically high or flop completely, meaning the variance of our residuals fans out at higher spending levels.
+* **Normality of Errors:** Assumes residuals are normally distributed. If a single viral ad campaign creates an extreme positive outlier in sales, the residuals will be heavily skewed, violating this assumption.
+* **No Perfect Multicollinearity:** If the company includes "Digital Ad Spend", "Social Media Ad Spend", and "Total Ad Spend" as three separate predictors, they will be highly correlated with one another, making it impossible for OLS to isolate the individual effect of each.
+* **Independence of Observations:** If we are looking at daily sales data, yesterday's sales are likely a good predictor of today's sales (autocorrelation). This violates the assumption that each data point is completely independent of the others.[^1]
+
+[^1]: Time series data almost always requires specialized models (like ARIMA) specifically because it naturally violates the independence assumption of standard OLS.
+
+---
+
+## 7. Code Exercises
+
+### Exercise 1 — Broom practice
+
+```{r}
+
+# Run once if needed:
+# install.packages("tidymodels")
+# install.packages("broom")
+# install.packages("janitor")
+
+library(tidymodels) # loads rsample, parsnip, recipes, workflows, yardstick, broom
+library(tidyverse) # loads dplyr, ggplot2, tidyr, readr, etc.
+
+# install.packages("conflicted") # for checking function conflicts
+library(conflicted)
+conflict_prefer("filter", winner = "dplyr") # ensure we are using dplyr's filter, not stats::filter
+tidymodels_prefer(quiet = FALSE)
+
+
+set.seed(42)
+n <- 1000
+
+customer_data <- tibble(
+  customer_id = 1:n,
+  tenure = sample(1:60, n, replace = TRUE),
+  monthly_spend = round(rnorm(n, mean = 85, sd = 25), 2),
+  num_products = sample(
+    1:5,
+    n,
+    replace = TRUE,
+    prob = c(0.3, 0.3, 0.2, 0.1, 0.1)
+  ),
+  num_complaints = rpois(n, lambda = 0.5),
+  last_login_days = sample(1:90, n, replace = TRUE),
+  region = sample(c("West", "East", "South", "Midwest"), n, replace = TRUE),
+  churn = factor(
+    ifelse(
+      0.05 *
+        num_complaints +
+        0.02 * last_login_days -
+        0.015 * tenure -
+        0.005 * monthly_spend +
+        rnorm(n, 0, 0.5) >
+        0.3,
+      "yes",
+      "no"
+    )
+  )
+)
+
+glimpse(customer_data)
+
+
+# BROOM PRACTICE
+
+
+spend_model <- lm(monthly_spend ~ tenure + num_products + region, data = customer_data)
+tidy(spend_model)
+glance(spend_model)
+augment(spend_model) |>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point()
+
+```
+
+| Question | Answer |
+| --- | --- |
+| Significant predictors? | None. Only the intercept is significant (p < 0.001). All predictors have p > 0.4. |
+| Good fit (R²)? | No. R² = 0.0036 means the model explains <1% of variance. Poor fit overall. |
+| Residual patterns? | No systematic patterns, but large residual spread indicates predictions are inaccurate. The model doesn't capture what drives monthly spending. |
+
+
+
+### Excercise 2 - Data Splitting
+
+```{r}
+
+
+library(tidymodels)
+library(ggplot2)
+library(knitr)
+
+set.seed(4827)
+
+# 1. Create 70/30 stratified split on churn
+split <- initial_split(customer_data, prop = 0.70, strata = churn)
+train <- training(split)
+test <- testing(split)
+
+cat("Training set size:", nrow(train), "\n")
+cat("Testing set size:", nrow(test), "\n\n")
+
+# 2. Verify churn rate is similar in both sets
+cat("Original churn rate:\n")
+original_churn <- customer_data |> count(churn) |> mutate(pct = round(n / sum(n) * 100, 1))
+original_churn |> kable()
+
+cat("\nTraining set churn rate:\n")
+train_churn <- train |> count(churn) |> mutate(pct = round(n / sum(n) * 100, 1))
+train_churn |> kable()
+
+cat("\nTesting set churn rate:\n")
+test_churn <- test |> count(churn) |> mutate(pct = round(n / sum(n) * 100, 1))
+test_churn |> kable()
+
+# 3. Check whether last_login_days distribution looks similar
+cat("\n\nTraining set - last_login_days summary:\n")
+train |> summarise(
+  min = min(last_login_days),
+  q25 = quantile(last_login_days, 0.25),
+  median = median(last_login_days),
+  mean = round(mean(last_login_days), 2),
+  q75 = quantile(last_login_days, 0.75),
+  max = max(last_login_days)
+) |> kable()
+
+cat("\nTesting set - last_login_days summary:\n")
+test |> summarise(
+  min = min(last_login_days),
+  q25 = quantile(last_login_days, 0.25),
+  median = median(last_login_days),
+  mean = round(mean(last_login_days), 2),
+  q75 = quantile(last_login_days, 0.75),
+  max = max(last_login_days)
+) |> kable()
+
+# Visualize distributions
+train_dist <- train |> mutate(set = "Training")
+test_dist <- test |> mutate(set = "Testing")
+combined <- bind_rows(train_dist, test_dist)
+
+ggplot(combined, aes(x = last_login_days, fill = set)) +
+  geom_histogram(alpha = 0.6, bins = 30) +
+  facet_wrap(~set) +
+  labs(
+    title = "Distribution of last_login_days: Training vs Testing",
+    x = "Days Since Last Login",
+    y = "Count",
+    fill = "Dataset"
+  ) +
+  theme_minimal()
+
+
+```
+
+
+
+| Statistic | Training | Testing |
+| --- | --- | --- |
+| Min | 1 | 1 |
+| Q25 | 22 | 21 |
+| Median | 45 | 44 |
+| Mean | 45.63 | 44.91 |
+| Q75 | 70 | 69 |
+| Max | 90 | 90 |
+
+
+### Excercise 3 - Critical thinking
+
+
+**1. A colleague says: “I looked at the test set to understand the data better before modeling. I did not fit any models on it.” Is this a problem? Why or why not?**
+Yes, this is a major problem known as data leakage. By exploring the test set, the analyst allows their human intuition to be inappropriately influenced by the holdout data, meaning any subsequent feature engineering or modeling choices will be inherently biased. Consequently, the test set is no longer a truly independent, unseen evaluation metric.
+
+**2. You are building a fraud detection model. Only 0.1% of transactions are fraudulent. Why is stratified splitting especially important here?**
+With severe class imbalance, a simple random split might accidentally place zero fraudulent transactions into either your testing or training set. Stratified splitting guarantees that the exact 0.1% ratio of fraud to non-fraud is preserved across both datasets. This ensures the model actually has enough minority class examples to learn from and can be evaluated accurately.
+
+**3. A model achieves 92% accuracy on the training set and 61% accuracy on the test set. What does this tell you? What would you do next?**
+This massive drop in performance indicates severe overfitting; the model essentially memorized the noise and specific patterns in the training data but completely failed to generalize to unseen data. Next steps should include simplifying the model, applying regularization techniques (like Lasso or Ridge), pruning decision trees, or utilizing cross-validation to better tune hyperparameters.
+
+## 10. Appendix
+
+* **Published Report on GitHub Pages:** 
+* **GitHub Repository:** https://github.com/brianvuong1/r-project-git
+
