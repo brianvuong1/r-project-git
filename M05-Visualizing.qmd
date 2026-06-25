@@ -1,0 +1,211 @@
+---
+title: "M05-Visualizing Data with Tables"
+author: "Brian V"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    number-sections: true
+    code-link: true
+    embed-resources: true
+    theme: zephyr
+    code-fold: true
+    code-tools: true
+    code-overflow: wrap
+editor: visual
+execute: 
+  freeze: auto
+  warning: false
+  message: false
+---
+
+
+---
+title: "M05-Visualizing Data with Tables"
+author: "Your Name"
+date: '`r format(Sys.time())`'
+format: 
+  html: 
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    number-sections: true
+    code-link: true
+    embed-resources: true
+    theme: zephyr
+    code-fold: true
+    code-tools: true
+    code-overflow: wrap
+editor: visual
+execute: 
+  freeze: auto
+  warning: false
+  message: false
+---
+
+# Part 1: Video Summaries and Reflections
+
+::: {.callout-note}
+## Assignment Context
+The following sections reflect on the role of the `gt` and `gtExtras` packages in R, as well as the conceptual differences between using tables versus charts for data visualization.[^1]
+:::
+
+## Summary of Learnings
+
+Based on the videos, I learned that tables should be treated as powerful data visualization tools rather than just static repositories for numbers. By applying intentional design principles, we can guide the reader's attention and highlight key insights just as effectively as we do with traditional charts. 
+
+Specifically, the videos introduced the `gt` package in R, which approaches table creation using a "grammar of tables." My key takeaways include:
+
+* **Tables as Visualizations:** Well-designed tables use visual cues—such as conditional color formatting, white space, and logical grouping—to make complex data instantly digestible, blurring the line between text and graphic.
+* **Layered Construction:** Similar to building a chart in `ggplot2`, the `gt` package allows you to construct a table layer by layer using the pipe operator (`%>%`), systematically applying formatting to specific rows or columns.
+* **Anatomy of a Table:** I learned how to clearly define and manipulate the distinct structural areas of a table, including the *header* (titles), *stub* (row labels), *column labels*, *body* (the core data), and *footer/source notes*.
+
+> "A well-designed table can tell a story just as effectively as a chart, provided the data is organized with the reader's cognitive load in mind." 
+
+## Thoughts on `gt` and `gtExtras`
+
+What I liked most about the `gt` and `gtExtras` packages is their **composability** and *ease of use*. The piping (`%>%`) workflow makes it incredibly intuitive to build a table layer by layer. The `gtExtras` package, in particular, acts as a fantastic shortcut, offering beautiful pre-built themes and inline charts without requiring complex raw HTML/CSS adjustments.
+
+## Tables vs. Charts: Complementary Roles
+
+::: {.panel-tabset}
+
+### Complementary Nature
+Tables and charts complement each other beautifully. While charts are superior for highlighting broad trends, distributions, and outliers at a glance, tables provide the exact precision needed for deep-dive analysis. You can see a practical example of this in @tbl-synthetic.
+
+### When to Prefer Tables
+I would prefer to use tables rather than charts under the following circumstances:
+1. When the exact numerical values are critical to the audience.
+2. When the data involves multiple differing units of measure (e.g., mixing currency, percentages, and raw counts).
+3. When the audience needs to look up specific individual records rather than general trends.
+:::
+
+---
+
+# Part 2: Visualizing Synthetic Data
+
+The table below (@tbl-synthetic) utilizes the synthetic data from this week's lecture. It demonstrates data wrangling and advanced table formatting using `gt` and `gtExtras`.
+
+```{r}
+#| label: tbl-synthetic
+#| tbl-cap: "Summary of Descriptive Statistics by Department and Gender"
+
+# Load required libraries
+library(tidyverse)
+library(gt)
+library(gtExtras)
+
+# I'll use the mtcars dataset
+data <- mtcars %>%
+  rownames_to_column(var = "car_model") %>%
+  mutate(
+    transmission = ifelse(am == 0, "Automatic", "Manual"),
+    cyl = factor(cyl, labels = c("4 cylinders", "6 cylinders", "8 cylinders"))
+  )
+
+glimpse(data)
+
+
+# Data wrangling: Group by transmission type and calculate statistics
+summary_table <- data %>%
+  group_by(transmission) %>%
+  summarise(
+    n = n(),
+    mean_mpg = mean(mpg, na.rm = TRUE),
+    sd_mpg = sd(mpg, na.rm = TRUE),
+    mean_hp = mean(hp, na.rm = TRUE),
+    sd_hp = sd(hp, na.rm = TRUE),
+    mean_wt = mean(wt, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # Add a ranking/color variable for visualization
+  mutate(efficiency_rank = rank(-mean_mpg))
+
+# Create the gt table
+gt_table <- summary_table %>%
+  gt(rowname_col = "transmission") %>%
+  
+  # Add title, subtitle, and source notes
+  tab_header(
+    title = "Vehicle Performance Summary",
+    subtitle = "Descriptive statistics by transmission type"
+  ) %>%
+  
+  # Stub head label
+  tab_stubhead(label = "Transmission Type") %>%
+  
+  # Spanner column labels
+  tab_spanner(
+    label = "Miles Per Gallon (MPG)",
+    columns = c(mean_mpg, sd_mpg)
+  ) %>%
+  tab_spanner(
+    label = "Horsepower (HP)",
+    columns = c(mean_hp, sd_hp)
+  ) %>%
+  
+  # Relabel columns
+  cols_label(
+    n = "Sample Size",
+    mean_mpg = "Mean",
+    sd_mpg = "Std Dev",
+    mean_hp = "Mean",
+    sd_hp = "Std Dev",
+    mean_wt = "Avg Weight (1000 lbs)",
+    efficiency_rank = "Efficiency Rank"
+  ) %>%
+  
+  # Format numbers
+  fmt_number(
+    columns = c(mean_mpg, sd_mpg, mean_hp, sd_hp, mean_wt),
+    decimals = 2
+  ) %>%
+  
+  # Add color bars to numeric columns
+  gt_color_rows(
+    columns = mean_mpg,
+    palette = "ggsci::blue_material",
+    domain = c(0, max(summary_table$mean_mpg))
+  ) %>%
+  
+  # Add footnotes
+  tab_footnote(
+    footnote = "Based on a sample of vehicles",
+    locations = cells_column_labels(columns = n)
+  ) %>%
+  tab_footnote(
+    footnote = "Standard deviation measures variability in the data",
+    locations = cells_column_labels(columns = sd_mpg)
+  ) %>%
+  
+  
+  # Apply theme
+  gt_theme_espn()
+
+gt_table
+
+
+
+```
+
+
+# Part 3: Relevance to the MSDM Project
+
+Including highly customized, visually appealing tables in my MSDM Culminating Experience Project is crucial for effective client communication and professional reporting. In digital marketing, we constantly deal with multifaceted data—such as campaign performance metrics, budget allocations, conversion rates, and ROI—that must be easily digestible for stakeholders who may not have a technical data background. 
+
+Adding tables generated via `gt` and `gtExtras` to my final written report and presentation slides provides several distinct advantages for my client:
+
+* **Executive-Ready Presentation:** Real-world clients expect polished, professional deliverables. The formatting capabilities of the `gt` package (such as custom themes, clear stubheads, and source notes) elevate raw marketing data into a refined, executive-summary format.
+* **Contextualizing KPI Trends:** By utilizing `gtExtras` to embed inline sparklines or micro-charts directly next to numerical metrics (e.g., month-over-month website traffic or cost-per-acquisition), the client can instantly see both the exact figures and the historical trend in a single, space-efficient view.
+* **Highlighting Actionable Insights:** Using conditional color formatting (like highlighting cells green for exceeding benchmark click-through rates, or red for underperforming ad sets) immediately draws the client's eye to critical areas that require strategic shifts or budget optimizations.
+* **Balancing Detail and Transparency:** While traditional charts are excellent for illustrating the "big picture" of a digital marketing strategy, clients ultimately need to see the hard numbers to approve budgets. A well-designed table provides the necessary precision and transparency to justify my strategic recommendations.
+
+
+# Part 4: GitHub Publication
+
+The source code and the published HTML report for this assignment are hosted on GitHub. You can access the project repository and the live web page using the links below:
+
+* **Published GitHub Pages URL:** https://brianvuong1.github.io/r-project-git/M02-Reflection.html
+* **GitHub Repository:** https://github.com/brianvuong1/r-project-git
