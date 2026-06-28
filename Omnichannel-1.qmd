@@ -1,0 +1,75 @@
+---
+title: " Career Research Essay: Preparing for Careers in Omnichannel Retailing and E-Commerce"
+author: "Brian V"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    code-link: true
+    embed-resources: true
+editor: visual
+execute: 
+  freeze: auto
+---
+
+
+
+## Introduction
+
+Omnichannel retailing has become a defining feature of modern commerce, requiring brands to create consistent and engaging experiences across digital platforms, physical retail environments, mobile applications, and social media. In this environment, graphic design plays a central role in shaping how customers perceive and interact with a brand. Designers are no longer limited to static visuals; instead, they contribute to dynamic, multi-platform storytelling that supports marketing, ecommerce, and product experiences.
+
+This essay explores career opportunities in omnichannel retailing with a focus on graphic design. The analysis is based on three official company career pages: Olipop Soda, New Balance, and Logitech. These companies represent different industries—beverages, athletic apparel, and technology—but all rely heavily on design-driven branding and omnichannel customer engagement.
+
+---
+
+## Summary of Job Postings
+
+The first job posting is from **Olipop Soda**, a rapidly growing functional beverage brand known for its bold and modern visual identity. A relevant role is a **Brand Designer (Visual Identity & Campaigns)** position. This role focuses on developing cohesive brand visuals across digital advertising, packaging, and social media. The designer is responsible for ensuring that Olipop’s playful and health-oriented identity remains consistent across ecommerce platforms, influencer campaigns, and retail marketing materials.
+
+The second job posting is from **New Balance Shoes**, a global athletic footwear and apparel company. A relevant role is a **Visual Content Designer (Retail & Digital Campaigns)** position. This role involves creating high-impact visual assets for product launches, seasonal campaigns, and global marketing initiatives. The designer works across multiple channels, including ecommerce product pages, in-store signage, and social media advertising. A key part of the role is adapting brand visuals to different regional markets while maintaining a consistent global identity.
+
+The third job posting is from **Logitech**, a global technology company specializing in computer peripherals and digital tools. A relevant role is a **Motion & Digital Experience Designer** position. This role focuses on creating animated graphics, interactive digital content, and visually engaging product storytelling for online platforms. Designers collaborate with product and marketing teams to produce visuals for product launches, advertising campaigns, and digital experiences that span ecommerce websites, retail partner platforms, and global marketing channels.
+
+These three roles demonstrate how graphic design supports omnichannel retailing through branding, motion content, and cross-platform visual communication.
+
+---
+
+## Skills and Knowledge Required
+
+Across the three job postings, there are several shared skills and competencies required for success in omnichannel graphic design roles. A strong foundation in **visual design principles** is essential, including composition, typography, color theory, and branding systems. Employers expect designers to create cohesive visual identities that translate effectively across both digital and physical environments.
+
+Technical proficiency in industry-standard tools such as **Adobe Creative Suite (Photoshop, Illustrator, InDesign, After Effects)** is consistently required. Olipop emphasizes static and packaging design work, New Balance focuses on campaign and retail visuals, and Logitech extends into motion design and interactive digital content. This shows that modern graphic designers must be flexible across both static and motion-based media.
+
+Another major requirement is experience designing for **multi-channel environments**. Designers must adapt content for ecommerce platforms, mobile interfaces, social media feeds, and physical retail spaces. This requires an understanding of formatting constraints, user experience considerations, and platform-specific design standards. For example, a campaign asset may need to be resized, reformatted, or animated depending on whether it appears on Instagram, a product page, or an in-store display.
+
+Soft skills are equally important. Strong collaboration skills are necessary because designers frequently work with marketing teams, product managers, and developers. Communication skills are essential for presenting design concepts and receiving feedback from cross-functional stakeholders. Creativity and storytelling ability are also highly valued, as brands rely on designers to translate abstract marketing goals into compelling visual narratives. Additionally, adaptability is critical in fast-paced retail environments where campaigns and product launches often operate under tight deadlines.
+
+---
+
+## Connection to This Course and the MSDM Program
+
+This course and the MSDM program provide a strong foundation for careers in omnichannel retailing and graphic design by integrating marketing strategy, digital tools, and consumer behavior insights. One of the key benefits of the program is its emphasis on understanding how digital marketing campaigns function across multiple platforms, which directly aligns with the responsibilities seen in the Olipop, New Balance, and Logitech roles.
+
+Courses focused on digital marketing help students understand how visual content contributes to engagement, conversion rates, and brand identity. This is particularly relevant for roles that involve designing ecommerce assets and campaign visuals. In addition, analytics-based courses help students interpret customer behavior data, allowing designers to make more informed creative decisions based on performance metrics.
+
+The MSDM program also supports technical skill development by introducing tools and workflows used in digital marketing and content creation. This includes exposure to branding strategies, content optimization, and user-centered design thinking. These skills are essential in omnichannel retail environments where design must balance creativity with data-driven decision-making.
+
+Overall, the program prepares students to think strategically about design, ensuring that their work not only looks visually appealing but also supports broader business and marketing objectives.
+
+---
+
+## Personal Reflection and Next Steps
+
+The role that interests me most is the **Motion & Digital Experience Designer position at Logitech** because it combines graphic design with animation and interactive storytelling. I am particularly interested in how motion design can enhance product storytelling and improve user engagement across digital platforms.
+
+My current strengths include creativity, foundational knowledge of graphic design principles, and familiarity with Adobe Photoshop and Illustrator. However, I need to improve my motion design skills, particularly using tools like After Effects, as well as strengthen my understanding of UX and digital experience design. I also want to develop a stronger understanding of how design performance is measured in digital marketing contexts.
+
+My next steps include building a more advanced design portfolio that includes motion graphics projects, brand identity systems, and ecommerce campaign mockups. I also plan to complete online certifications in motion design and digital marketing analytics. Additionally, I aim to pursue internships or freelance opportunities that allow me to work on real-world branding and digital content projects. These steps will help me transition into a competitive graphic design role within the omnichannel retail industry.
+
+---
+
+## Conclusion
+
+Omnichannel retailing creates significant opportunities for graphic designers by requiring consistent and compelling visual communication across digital and physical channels. The roles at Olipop Soda, New Balance, and Logitech demonstrate the growing importance of branding, motion design, and cross-platform content creation. By combining creative design skills with technical knowledge and marketing awareness, designers can play a central role in shaping modern retail experiences.
