@@ -1,0 +1,182 @@
+---
+title: "GP1: Omnichannel Journey Map"
+author: "Ron S, Kevin B, Alexa B, Sandy Z, Brian V"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    code-link: true
+    embed-resources: true
+    minify-html: true
+editor: visual
+execute: 
+  freeze: auto
+---
+
+
+## Step-by-Step Guidance
+
+### Step 1: Target Customer Segments
+
+CPP Students, Faculty & Staff, Alumni, Local Community Members, and Online-First Shoppers are the main target segments for this omnichannel journey map of CPP Farm Store. These five groups, which include both on-campus and off-campus audiences with different but similar reasons for interacting with CPP Farm Store, were chosen because they are the most representative and frequent customers.
+
+- **CPP Students:** One of the main customer bases who live and study on or near campus, making the store geographically accessible. They are motivated by affordability, convenience, and the novelty of buying university-produced food. They are active on social media and respond well to digital promotions, but many remain unaware that the store exists, making awareness building a critical opportunity.
+- **Faculty and Staff:** Reliable, repeat customers who shop with intention (e.g., grabbing lunch or meeting items). They value consistency in hours and product availability, and are well-positioned to become habitual shoppers if the experience is seamless.
+- **Alumni:** A high-value emotional segment with a built-in reason to support the store for gifting during holidays or milestone events. Often located off-campus, they depend heavily on digital channels (website, email, social media) to connect and require strong online ordering capabilities.
+- **Local Community Members:** Off-campus shoppers (families, residents of Pomona/San Gabriel Valley) drawn to locally sourced products and the university farm story. They face the most friction regarding campus logistics (navigation, parking, store hours), representing a major opportunity for digital information optimization.
+- **Online-First Shoppers:** Customers preferring a purely digital convenience workflow (researching, browsing, purchasing) over in-store browsing. They expect a fully functional e-commerce experience with clear product pages, accurate inventory, and reliable click-and-collect or delivery options. Capturing this segment requires prioritizing the Shopify storefront, product feed quality, and a seamless pickup process.
+
+Together, these five segments share a common thread: They all need better awareness, clearer digital information, and a more connected experience between online discovery and in-store or pickup purchase. The journey map that follows is built around their overlapping goals and the friction points that currently stand between them and a satisfying CPP Farm Store experience.
+
+
+## Step 2: Customer Goals (Brian)
+
+### Target Segment: Local Community Members & Weekend Gift Buyers
+
+- **Goal 1: Validate Product Availability Remotely**
+  - *The Intent:* The customer wants to know if high-demand, hyper-seasonal items (like freshly squeezed CPP orange juice, dynamic holiday gift baskets, or specific harvest produce) are actually in stock before committing to driving onto a university campus.
+- **Goal 2: Source an Authentic, Meaningful Gift**
+  - *The Intent:* They want to buy a high-quality, locally produced item that tells a story (e.g., "made by Cal Poly Pomona agriculture students") to present as a host gift or holiday token.
+- **Goal 3: Bypass Campus Logistics Friction**
+  - *The Intent:* They want to easily find accurate store hours, clear driving directions separate from general university navigation, and understand exactly where they can park legally without getting a campus parking citation.
+- **Goal 4: Execute an Efficient "Click-and-Collect" Purchase**
+  - *The Intent:* They want to browse, select, and pay online ahead of time so they can perform a quick, structured, friction-free physical pickup.
+
+
+## Step 3: Journey Stages (Brian)
+
+### 1. Awareness Stage
+
+- **Doing:** Scrolling through Instagram over the weekend; searching Google for "unique local food gifts near Pomona"; hearing a coworker rave about CPP’s student-made ice cream or honey.
+- **Thinking:** *"I knew Cal Poly had a farm, but I didn't know they had an actual retail store open to the general public. Can anyone just walk in?"*\[cite: 2\]
+- **Feeling:** Curious and intrigued, but slightly hesitant about whether a university campus facility genuinely welcomes off-campus locals\[cite: 2\].
+- **Needing:** Explicit, clear messaging on public channels that the store is open to the community, accompanied by strong visuals of the specialty products\[cite: 2\].
+
+### 2. Consideration Stage
+
+- **Doing:** Visiting the CPP Farm Store website; checking their Google Maps listing for weekend hours; trying to look up an online product catalog or price list\[cite: 2\].
+- **Thinking:** *"Are they open on Sundays? Do I need a student ID or a special parking pass just to get to the storefront? What kind of items do they have right now?"*\[cite: 2\]
+- **Feeling:** Frustrated if the website is outdated or lacks a basic product list; anxious about navigating unfamiliar campus roads and parking traps\[cite: 2\].
+- **Needing:** An easy-to-browse digital catalog, clear "How to Visit Us" instructions, and highly visible, accurate operating hours\[cite: 2\].
+
+### 3. Purchase Stage
+
+- **Doing:** Selecting a custom specialty gift basket online, entering credit card details on the Shopify store, and hitting "Submit Order."\[cite: 2\]
+- **Thinking:** *"Did my order actually go through? How long do they hold it for me? Will I get an alert when it's ready, or should I just show up?"*\[cite: 2\]
+- **Feeling:** Relieved to lock down the gift, but slightly uncertain about the exact timeline and process for fulfillment\[cite: 2\].
+- **Needing:** An instant digital confirmation (email/SMS) that explicitly outlines the pickup window, rules, and estimated readiness time\[cite: 2\].
+
+### 4. Fulfillment or Pickup Stage
+
+- **Doing:** Driving to the campus physical location, attempting to navigate campus roads, finding a place to park, and walking into the store to claim the items\[cite: 2\].
+- **Thinking:** *"This GPS route is taking me toward student housing. Where is the actual store parking lot? Is there a fast-track line for online orders inside?"*\[cite: 2\]
+- **Feeling:** Stressed by campus traffic and confusing intersections; annoyed if they have to stand in a long grocery checkout line just to grab a pre-paid box\[cite: 2\].
+- **Needing:** A designated "Online Order Pickup" parking stall, clear physical directional signage from the main campus entrance, and a dedicated pickup counter inside the store\[cite: 2\].
+
+### 5. Post-Purchase Engagement Stage
+
+- **Doing:** Gifting the item to a friend or enjoying the local produce at home; noticing a QR code on the packaging or receiving a digital receipt in their inbox\[cite: 2\].
+- **Thinking:** *"This orange juice is incredible. I wonder what other seasonal items they bring in during the autumn harvest or winter months?"*\[cite: 2\]
+- **Feeling:** Highly satisfied with the product quality; emotionally connected to the agricultural student mission\[cite: 2\].
+- **Needing:** A subtle digital loop (like a post-purchase follow-up email or a dynamic packaging QR code) that invites them to see upcoming seasonal arrivals\[cite: 2\].
+
+### 6. Loyalty or Repeat Purchase Stage
+
+- **Doing:** Remembering the store when corporate holiday gifting season arrives; opening a seasonal email newsletter; returning to the website to order in bulk\[cite: 2\].
+- **Thinking:** *"I need 10 gifts for my clients. The CPP Farm Store baskets were a massive hit last year—let me see if I can reorder those seamlessly online."*\[cite: 2\]
+- **Feeling:** Appreciated as a returning customer; loyal to the local campus community\[cite: 2\].
+- **Needing:** A streamlined "re-order" interface on the website and early-access notifications for high-demand, limited-run seasonal harvest releases\[cite: 2\].
+
+
+## Step 4: Identify Touchpoints
+
+| Journey Stage | Customer Touchpoint |
+|:-----------------------------------|:-----------------------------------|
+| **Awareness** | Google Search, Google Maps, CPP Farm Store website, CPP website, Instagram, campus sign, flyers, word of mouth, campus events\[cite: 2\] |
+| **Consideration** | CPP Farm Store website, online product listing, Instagram posts or stories, Google reviews, product photos\[cite: 2\] |
+| **Purchase** | Physical CPP Farm Store, Calling the store\[cite: 2\] |
+| **Fulfillment or Pickup** | In-store pickup, order confirmation email, store staff\[cite: 2\] |
+| **Post-Purchase Engagement** | Instagram, product packaging\[cite: 2\] |
+| **Loyalty or Repeat Purchase** | Seasonal promotion, Instagram update, campus events\[cite: 2\] |
+
+
+## Data Visualization: Touchpoints per Stage
+
+Below is an embedded R plot to help your group visualize the volume of touchpoints currently active across each stage of your omnichannel map.
+
+```{r}
+#| label: touchpoint-summary-plot
+#| message: false
+#| warning: false
+#| fig-cap: "Distribution of Omnichannel Customer Touchpoints"
+
+library(tidyverse)
+library(tidymodels)
+library(ggplot2)
+
+# Create data frame from Step 4 touchpoint matrix counts
+touchpoint_data <- data.frame(
+  Stage = factor(c("Awareness", "Consideration", "Purchase", "Fulfillment", "Post-Purchase", "Loyalty"),
+                 levels = c("Awareness", "Consideration", "Purchase", "Fulfillment", "Post-Purchase", "Loyalty")),
+  Count = c(9, 5, 2, 3, 2, 3)
+)
+
+# Plot touchpoint distribution
+ggplot(touchpoint_data, aes(x = Stage, y = Count, fill = Stage)) +
+  geom_bar(stat = "identity", alpha = 0.85, show.legend = FALSE) +
+  geom_text(aes(label = Count), vjust = -0.3, fontface = "bold") +
+  scale_fill_brewer(palette = "Greens") +
+  labs(
+    title = "Touchpoint Density by Journey Stage",
+    x = "Journey Stage",
+    y = "Number of Identified Touchpoints"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 35, hjust = 1, face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+## Step 5: Pain Points (Alexa)
+
+1.  Many students, visitors, and community members are unaware that the CPP Farm Store exists or what products it offers.
+2.  Store hours, location information, and seasonal availability may be difficult to find across different channels.
+3.  Customers cannot easily browse products online before visiting the store, making it harder to plan purchases.
+4.  Product descriptions and images may be limited, preventing customers from learning more about locally produced items.
+5.  There is no clear or convenient online ordering and pickup process, which may discourage busy students and faculty from purchasing.
+6.  Promotions and seasonal campaigns are not always integrated across social media, email, and in-store signage, resulting in inconsistent messaging.
+7.  Customers who make a purchase may not receive follow-up communication, reducing opportunities for repeat purchases.
+8.  There is limited personalization or loyalty communication to encourage long-term customer relationships.
+
+## Step 6: Omnichannel Opportunities (Alexa)
+
+1.  Increase awareness by improving Google Search visibility, optimizing Google Business Profile, and promoting the store through social media and campus channels.
+2.  Create a user-friendly Shopify website that clearly displays store hours, location information, featured products, and seasonal offerings.
+3.  Develop detailed product pages with high-quality images, pricing, descriptions, and information about local sourcing.
+4.  Introduce online ordering with options such as in-store pickup to provide greater convenience for students, faculty, and visitors.
+5.  Launch integrated seasonal campaigns across Instagram, email, campus events, and in-store signage to provide a consistent omnichannel experience.
+6.  Implement Google Merchant Center and retail media channels to improve product discoverability and drive online traffic.
+7.  Use post-purchase emails to thank customers, request reviews, recommend related products, and promote upcoming events.
+8.  Establish a loyalty or rewards program that encourages repeat purchases and strengthens customer engagement.
+9.  Use analytics dashboards to monitor customer behavior, track campaign performance, and identify opportunities for continuous improvement.
+
+## Visual Journey Map
+
+https://docs.google.com/document/d/1tGmEs_I4HG3lRM89Hfl8Gptqtq4HfAFbEY7sO4Ru-bc/edit?usp=sharing 
+
+
+## Appendix
+
+### Project Resources
+*   **GitHub Repository:** [Link to your GitHub Repo]https://github.com/brianvuong1/r-project-git
+*   **Published Report:** [Link to your Published Report]
+
+
+
+
+
+
+
