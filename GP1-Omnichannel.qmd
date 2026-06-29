@@ -1,6 +1,6 @@
 ---
 title: "GP1: Omnichannel Journey Map"
-author: "Ron S, Kevin B, Alexa B, Sandy Z, Brian V"
+author: "Ron Sabilla, Kevin Bachez, Alexa Bueno, Sandy Zhu, Brian Vuong"
 date: today
 format: 
   html: 
@@ -165,14 +165,17 @@ ggplot(touchpoint_data, aes(x = Stage, y = Count, fill = Stage)) +
 
 ## Visual Journey Map
 
-https://docs.google.com/document/d/1tGmEs_I4HG3lRM89Hfl8Gptqtq4HfAFbEY7sO4Ru-bc/edit?usp=sharing 
+Link to Canva for the Visual Journey Map https://canva.link/952hyp52b1k6upp
+
 
 
 ## Appendix
 
 ### Project Resources
 *   **GitHub Repository:** [Link to your GitHub Repo]https://github.com/brianvuong1/r-project-git
-*   **Published Report:** [Link to your Published Report]
+*   **Published Report:** [Link to your Published Report] https://brianvuong1.github.io/r-project-git/GP1-Omnichannel.html
+
+
 
 
 
