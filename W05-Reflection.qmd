@@ -219,3 +219,7 @@ Micro-averaging is most likely to give a misleadingly optimistic picture of mode
 
 Github Repository: https://github.com/brianvuong1/r-project-git
 
+Published Report: https://brianvuong1.github.io/r-project-git/W05-Reflection.html
+
+
+
