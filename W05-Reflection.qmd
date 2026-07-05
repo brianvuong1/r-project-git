@@ -934,8 +934,7 @@ To ensure that Platinum customers are not underrepresented, you would choose a m
 In a marketing context, which averaging method is most likely to give a misleadingly optimistic picture of model performance? Why?
 Micro-averaging is most likely to give a misleadingly optimistic picture of model performance in a marketing context. This is because it aggregates the performance across all classes, which can be heavily influenced by the performance on the majority class (e.g., Bronze). If the model performs well on the larger class but poorly on the smaller, more valuable classes (like Platinum), the micro-averaged metrics may suggest that the model is performing well overall, even though it fails to effectively target the high-value segments. This can lead to misguided marketing strategies and resource allocation.
 
-```{r ex9-4, eval=FALSE}
-# Your code here
+# Appendix
 
-```
+Github Repository: https://github.com/brianvuong1/r-project-git
 
