@@ -1,6 +1,6 @@
 ---
 title: "ITP-Shopify Store - Assignment 3 - Product Catalog Development"
-author: "Your Name"
+author: "Brian Vuong"
 date: today
 format: 
   html: 
@@ -80,3 +80,14 @@ The product assortment at **Atelier North** was strategically designed around th
 # 4. Cal Poly Pomona Farm Store Application Reflection
 
 When presenting products online, the **Cal Poly Pomona (CPP) Farm Store** should focus heavily on storytelling and provenance to differentiate itself from standard grocery e-commerce. Because the store features student-grown produce, local goods, and university-made products (like their famous nursery plants or fresh juices), the online product pages must highlight this unique origin. They should consider implementing badges or specific tags (e.g., "Student-Grown," "Local," "Seasonal") directly on product images. Furthermore, because agricultural products are highly seasonal and perishable, their Shopify setup must prioritize clear, real-time inventory tracking and distinct communication regarding fulfillment (e.g., specifying if items are for local pickup only vs. available for shipping). High-quality, bright imagery that conveys freshness will be essential in translating the vibrant, hands-on experience of the physical Farm Store to a digital platform.
+
+
+
+# Appendix
+
+Published Report https://brianvuong1.github.io/r-project-git/product-catalog.html
+Github Repository https://github.com/brianvuong1/r-project-git
+
+
+
+
