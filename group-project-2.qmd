@@ -18,11 +18,14 @@ execute:
 
 The Google Doc includes screenshots of the Shopify mini-store prototype, the homepage, navigation, products, as well as a description of the design and functionality of the store. The document also includes a link to the live prototype, which can be accessed by clicking on the link below.
 
-Shopify Mini-Store Prototype: https://docs.google.com/document/d/19bmHyhageLmzfIA8WHDawli3JnoderAl9pglB3raAUI/edit?usp=sharing
+[Click here to view the Mini-Store Prototype](https://docs.google.com/document/d/19bmHyhageLmzfIA8WHDawli3JnoderAl9pglB3raAUI/edit?usp=sharing)
+
 
 
 
 ## Appendix
 
 Github Repo: https://github.com/brianvuong1/r-project-git
-Published Report: 
+Published Report: https://brianvuong1.github.io/r-project-git/group-project-2.html
+
+
