@@ -1,0 +1,104 @@
+---
+title: "M06-Reflection Essay-Advanced Data Wrangling"
+author: "Brian V"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    code-link: true
+    embed-resources: true
+editor: visual
+execute: 
+  freeze: auto
+---
+
+## Step 1: Impressions and Analysis of Revealjs Presentations
+
+### Personal Impression
+
+Transitioning from traditional slide tools to Quarto's Revealjs framework feels like a massive leap forward for code-centric presentations. Instead of fighting a separate UI to paste code blocks or import static plots, Revealjs allows presentation assets to live right next to the underlying data analysis. It creates an ecosystem where slides look clean, minimalist, and deeply professional by default.
+
+### Key Capabilities
+
+Revealjs is packed with developer-first layout features that make technical presentations significantly more dynamic than classic text decks: \* **Code and Output Integration:** Code blocks can be executed live during compilation, displaying data frames, diagnostic text, and plots in real-time. \* **Code Highlighting & Animations:** Features like `code-line-numbers` allow speakers to step through specific lines of code incrementally, shifting the background focus down the block as they explain a function. \* **Content Transitions & Fragments:** Revealjs supports fine-grained fragment control (e.g., fading elements in, sliding up, or shifting colors) to manage visual pacing. \* **Responsive Styling:** Built completely on HTML/CSS, the presentation natively scales across varying display resolutions while maintaining a clean, scannable layout.
+
+### Strengths and Weaknesses vs. PowerPoint (PPT)
+
+| Feature | Quarto Revealjs | Microsoft PowerPoint |
+|:-----------------------|:-----------------------|:-----------------------|
+| **Reproducibility** | **High.** If the data updates, a simple re-render updates every table, calculation, and chart instantly. | **Low.** Charts and numbers must be manually copied, updated, and re-pasted. |
+| **Version Control** | **Excellent.** Slides are saved as plain text (`.qmd`), making them easily trackable via Git and GitHub. | **Poor.** Binary files (`.pptx`) generate messy merge conflicts and are difficult to track over time. |
+| **Design Control** | Controlled via consistent global markdown rules and CSS styles. No accidental font or layout drift. | Absolute visual freedom via a drag-and-drop canvas, making fine-tuning highly intuitive. |
+| **Learning Curve** | High. Requires familiarity with Markdown syntax, YAML configurations, and basic CSS styling. | Low. Accessible to non-programmers via an intuitive graphical user interface. |
+
+------------------------------------------------------------------------
+
+## Step 2: Developing a Revealjs Presentation
+
+- **Published Presentation Link:** [View My Live Revealjs Slide Deck](https://brianvuong1.github.io/r-project-git/first-revealjs.html#/title-slide)
+
+### Presentation Description
+
+This presentation analyzes seasonal sales data and inventory dynamics for an e-commerce farm store, specifically evaluating structural optimizations for their customizable gift box product bundles. It includes an interactive data table breaking down itemized supplier costs alongside a clean, reproducible visual charting profit margins across different order frequencies.
+
+### Key Takeaways and Lessons Learned
+
+Building a presentation programmatically taught me that vertical space is a finite, premium currency. Standard Revealjs slides use a baseline constraint of `1050px` by `700px`, meaning large code chunks or massive plots can easily bleed off the edge of the screen.
+
+I learned how to manage this layout strain using column divs (`::: {.columns}`) to split text and graphics horizontally, and how to utilize `max-height` configurations in custom CSS files to enable scrolling on text-heavy code outputs. The process shifted my approach from trying to make slides look pretty manually to designing modular, reproducible presentation scripts that format themselves.
+
+------------------------------------------------------------------------
+
+## Step 3: Advanced Relational Database Joins in `dplyr`
+
+To successfully merge distinct relational tables, `dplyr` organizes join types by their logical intent. Below are three vital join functions, each drawn from a distinct structural category.
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+
+# Constructing baseline relational tables for demonstration
+orders_tbl <- tibble(
+  order_id    = c(1001, 1002, 1003, 1004),
+  customer_id = c(1, 2, 1, 4),
+  box_units   = c(3, 1, 5, 2)
+)
+
+customers_tbl <- tibble(
+  customer_id   = c(1, 2, 3),
+  customer_name = c("Gavin", "Elena", "Marcus")
+)
+```
+
+### 1. Mutating Joins: `left_join()`
+
+- **When to Use:** Use a mutating left join when your goal is to augment a primary data frame ($X$) with helper columns from a lookup table ($Y$). It preserves all original observations from the left table, bringing over matching metadata from the right table wherever keys align. If no match is found, an `NA` is introduced.
+
+```{r left-join-example}
+# Executing left join to match customer names to incoming orders
+left_join(orders_tbl, customers_tbl, by = "customer_id")
+```
+
+*(Note: Order 1004 retains its spot in our data stream, receiving an explicit `NA` because `customer_id = 4` does not exist in our customer dictionary.)*
+
+### 2. Filtering Joins: `anti_join()`
+
+- **When to Use:** Use an anti-join as a defensive diagnostic tool to filter records. Instead of merging new variables, it drops all records that successfully match the secondary table, leaving behind **only** the rows from the left table that have no matching key in the right table. This is perfect for isolating orphan records or missing data gaps.
+
+```{r anti-join-example}
+# Identifying orders placed by customers missing from our customer records
+anti_join(orders_tbl, customers_tbl, by = "customer_id")
+```
+
+### 3. Join Problems / Safeguards: Enforcing Relationships with `relationship`
+
+- **When to Use:** One of the most common issues in relational joins is a "Cartesian explosion," which happens when duplicate keys exist across tables when you aren't expecting them, causing rows to quietly multiply. By utilizing the modern `relationship` argument inside a join, you can explicitly state your structural expectations (like `relationship = "one-to-one"`). If the underlying data violates this pattern, R will instantly halt execution and throw an error rather than allowing corrupted rows to pass into your downstream analysis.
+
+```{r join-problem-example}
+# Forcing a strict 1-to-1 integrity check during a join
+# (Will error out if a customer_id appears multiple times in either table)
+tryCatch({
+  left_join(orders_tbl, customers_tbl, by = "customer_id", relationship = "one-to-one")
+}, error = function(e) { cat("ERROR FLAG TRIGGERED:\n", e$message) })
+```
