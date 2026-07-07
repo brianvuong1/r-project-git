@@ -1,0 +1,127 @@
+---
+title: "Optimizing the Farm Store Gift Box Experience"
+subtitle: "Proposal Presentation"
+author: "Digital Marketing Consultant"
+institute: "IBM 6540, Cal Poly Pomona"
+date: "`r Sys.Date()`"
+format: 
+  revealjs:
+    theme: serif
+    width: 1600
+    height: 900
+    footer: "Farm Store Digital Transformation Proposal"
+    transition: slide
+    transition-speed: default
+    incremental: false
+    toc: true
+    toc-depth: 1
+    slide-number: true
+    scrollable: true
+    smaller: true
+    code-fold: false
+    code-overflow: wrap
+    number-sections: false
+    number-depth: 5
+    embed-resources: true
+    css: styles.css
+editor: visual
+execute: 
+  echo: true
+  freeze: auto
+---
+
+# Introduction & Problem Statement
+
+## The Current Friction Point
+
+Using a classic storytelling framework, every hero encounters a roadblock. For our client's online Farm Store, the obstacle isn't the quality of the product—it is the digital ordering experience.
+
+:::::: columns
+::: {.column width="50%"}
+### The Status Quo
+
+- Customers love physical, customizable gift boxes.
+- The current web interface requires multiple steps to build a box.
+- High bounce rates occur during the step-by-step selection process.
+:::
+
+:::: {.column width="50%"}
+### The Complication
+
+::: fragment
+> **The Problem Statement:** While pre-made configurations sell reliably, the highly profitable "design-your-own" customizable gift box option suffers a **68% cart abandonment rate** due to user interface friction.
+:::
+::::
+::::::
+
+::: notes
+Speaker Notes: - Introduce the client context briefly. - Emphasize that customizable options have higher margins but suffer from drop-offs. - Explain that this proposal targets that specific UI/UX bottleneck using analytics.
+:::
+
+# Research Framework
+
+## Analytics Objective & Importance
+
+### Core Objective
+
+Our primary analytics objective is to isolate exactly where users experience cognitive overload and abandon the customization funnel.
+
+::: incremental
+1.  **Track Step-by-Step Drop-offs:** Quantify micro-abandonment rates at the box size, item insertion, and greeting card steps.
+2.  **Predict Order Completion:** Identify which item combinations or session lengths correlate with a completed sale.
+3.  **Formulate UX Interventions:** Redesign the interface layout based on predictive interaction data.
+:::
+
+. . .
+
+### Why This Matters Now
+
+Optimizing this path turns casual web traffic into high-value revenue. Decreasing abandonment by just 15% recovers substantial lost margins for the Farm Store ahead of the peak holiday season.
+
+------------------------------------------------------------------------
+
+## Literature Review & Data Adequacy
+
+### Theoretical Foundation
+
+Well-established consumer behavior frameworks, such as the **Technology Acceptance Model (TAM)** and the **Theory of Choice Overload**, suggest that when digital interfaces offer too many unguided choices, consumer purchase intent drops sharply.
+
+### Data Assessment
+
+- **Current Assets:** We have successfully gathered 3 months of granular Google Analytics 4 (GA4) clickstream events and Shopify session logs.
+- **Adequacy:** This dataset is highly adequate for identifying drop-off stages.
+- **Need for Additional Analysis?** Yes. While clickstream data tells us *where* users leave, we will require a post-purchase survey to understand *why* they preferred pre-made options over building their own.
+
+::: aside
+See: Iyengar, S. S., & Lepper, M. R. (2000). "When choice is demotivating." *Journal of Personality and Social Psychology*.
+:::
+
+# Methodology & Data Visualization
+
+## Data Wrangling & Sample Characteristics
+
+```{r}
+#| label: load-and-plot-data
+#| echo: true
+#| fig-align: center
+
+# 1. Simulate the Farm Store session data
+set.seed(123)
+session_data <- data.frame(
+  Funnel_Stage = factor(c("1. View Customizer", "2. Select Box Size", "3. Add Items", "4. Checkout Completed"),
+                        levels = c("1. View Customizer", "2. Select Box Size", "3. Add Items", "4. Checkout Completed")),
+  Sessions = c(1200, 850, 410, 280)
+)
+
+# 2. Extract sample metric for inline narrative reporting
+total_initial_users <- session_data$Sessions[1]
+final_conversions <- session_data$Sessions[4]
+
+# 3. Generate a reproducible visualization of the funnel
+barplot(session_data$Sessions, 
+        names.arg = session_data$Funnel_Stage, 
+        col = "#8B4513", 
+        main = "Gift Box Customization Funnel Drop-off",
+        ylab = "Number of Web Sessions",
+        xlab = "User Journey Stage")
+```
