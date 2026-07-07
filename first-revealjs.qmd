@@ -125,3 +125,40 @@ barplot(session_data$Sessions,
         ylab = "Number of Web Sessions",
         xlab = "User Journey Stage")
 ```
+
+
+
+# Methodology Core
+
+## Measures & Analytics Methods
+
+### Variables and Operational Measures
+* **Dependent Variable ($Y$):** Conversion Success (Binary: 1 if checkout completed, 0 if abandoned).
+* **Independent Variables ($X$):**
+  * *Time Spent per Stage (Continuous):* Measured in seconds via clickstream timestamps.
+  * *Item Complexity (Discrete):* Total count of distinct items added to the virtual box.
+  * *Device Type (Categorical):* Mobile vs. Desktop user-agent string.
+
+### Analytics Strategy
+To identify the predictive thresholds of drop-offs, we fit a binary logistic regression model:
+
+$$\ln\left(\frac{P}{1-P}\right) = \beta_0 + \beta_1(\text{Time}) + \beta_2(\text{Item Count}) + \beta_3(\text{Mobile User})$$
+
+This methodology identifies whether choice fatigue or device optimization challenges drive user abandonment.
+
+::: {.notes}
+Speaker Notes:
+- Explain that the logistic regression allows us to calculate the log-odds of a consumer dropping out.
+- Mention that $\beta_2$ isolates choice overload explicitly by tracking item counts.
+:::
+
+# References
+
+## References
+
+* Davis, F. D. (1989). "Perceived usefulness, perceived ease of use, and user acceptance of information technology." *MIS Quarterly*, 13(3), 319-340.
+* Iyengar, S. S., & Lepper, M. R. (2000). "When choice is demotivating: Can one desire too much of a good thing?" *Journal of Personality and Social Psychology*, 79(6), 995-1006.
+* Miller, D. (2017). *Building a StoryBrand: Clarify Your Message So Customers Will Listen.* HarperCollins Leadership.
+* Quarto Documentation (2026). *Revealjs Presentations Authoring Guide.* Retrieved from https://quarto.org
+
+
