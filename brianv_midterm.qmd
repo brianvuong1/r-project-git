@@ -40,7 +40,7 @@ execute:
 
 Run this chunk first. It loads all packages and recreates the datasets used throughout the exam. **Do not modify this chunk.**
 
-```{r setup}
+```{r}
 library(tidymodels)
 library(tidyverse)
 library(broom)
@@ -155,13 +155,15 @@ mail_data <- tibble(
     responded = factor(responded, levels = c(1, 0), labels = c("yes", "no"))
   )
 
-# ── Real marketing campaign dataset (from Kaggle) ─────────────────────────
-# Daily performance data for 11 marketing campaigns over 28 days (Feb 2021).
-# Source: "Nykaa Marketing Campaign Performance Dataset"
-# https://www.kaggle.com/datasets/nalisha/nykaa-marketing-campaign-performance-dataset
-# This is the exam's one *real* (non-simulated) dataset, used in Q11 to give
-# students a genuine continuous outcome (revenue) rather than a synthetic one.
-marketing <- read.csv("data/Marketing.csv")
+library(tidyverse)
+
+marketing <- read_csv(
+  "marketing.csv",
+  show_col_types = FALSE
+)
+
+glimpse(marketing)
+
 ```
 
 ---
@@ -182,6 +184,19 @@ A marketing team is discussing three projects:
 2. This course focuses on one of these types. Which one, and why is it the most relevant for marketing machine learning?
 
 *Write your answer here (2–3 sentences per part).*
+
+**1.**
+
+* **Project A – Descriptive model:** This project summarizes and visualizes historical sales data by drawing a trend line to show how sales have changed over time. Its goal is to describe patterns in the data rather than explain causes or predict future outcomes.
+
+* **Project B – Inferential model:** This project tests whether the new email subject line caused a statistically significant increase in open rates compared to the control group. It uses statistical inference to determine whether an observed difference is likely due to the treatment rather than random chance.
+
+* **Project C – Predictive model:** This project builds a model that predicts which prospects are most likely to respond to a future mailing. The goal is to make accurate predictions for new, unseen data, which is the defining characteristic of predictive modeling.
+
+**2.**
+
+This course focuses on **predictive modeling**. Predictive models are especially important in marketing machine learning because they help businesses forecast customer behavior, such as predicting responses, purchases, or churn, allowing marketers to make more effective, data-driven decisions.
+
 
 ---
 
@@ -225,6 +240,15 @@ augment(spend_fit) |>
 3. What pattern (if any) do you see in the residual plot, and what might it suggest about the model?
 
 *Write your answer here.*
+
+1. **Statistically significant predictors:**  
+At the 0.05 significance level, **tenure** (p = 1.69 × 10⁻⁶) and **num_products** (p = 8.12 × 10⁻⁶) are statistically significant because their p-values are less than 0.05. The region variables (Midwest, South, and West) are **not** significant since their p-values are all greater than 0.05.
+
+2. **Interpretation of R²:**  
+The model has an **R² of 0.0442**, meaning it explains only about **4.4% of the variation** in monthly spending. This indicates the model has **weak explanatory power** and is not a particularly good fit for the data, suggesting that other important predictors are missing.
+
+3. **Residual plot:**  
+The residual plot appears to show the residuals scattered around the zero line without a strong systematic pattern, which supports the linearity assumption. However, the low R² suggests that while the model may satisfy basic assumptions, it does not explain much of the variability in monthly spending.
 
 ---
 
@@ -272,6 +296,12 @@ bind_rows(
 
 *Write your answer here.*
 
+1. The **data budget** is the limited amount of available data that must be divided among model training, tuning, and final testing. It matters because using too little data for training can weaken the model, while using too little for testing can make performance estimates unreliable.
+
+2. With stratification, both the training and test sets have a churn rate of **19.9%**, so the class proportions are essentially identical. Without stratification, the training set has **20.3%** churn while the test set has **18.8%**, showing that random splitting can create less representative class distributions.
+
+3. Stratified splitting is especially important when one class is rare because it preserves approximately the same class proportions in each data set. Without it, the test or training set might contain too few rare cases, causing the model to learn the minority class poorly or producing an unreliable evaluation of its performance.
+
 ---
 
 # Topic 2 — Foundations of Logistic Regression
@@ -311,6 +341,12 @@ tibble(
 
 *Write your answer here.*
 
+1. The mean income is higher than the median because the income distribution is **right-skewed (positively skewed)**, with a small number of very high-income values pulling the mean upward. This is common in marketing data because most customers have moderate incomes while a few customers earn substantially more.
+
+2. Changing from the natural log to log base 10 only multiplies every transformed value by a constant (about **2.30**, as shown by the ratio). After `step_normalize()`, this constant scaling is removed because the data are centered and standardized, so the final model is unaffected by the choice of log base.
+
+3. The `offset = 1` is included so that values of **0** can be safely transformed, since `log(0)` is undefined. Without the offset, any zero values would produce `-Inf` (or errors), causing problems when fitting the model.
+
 ---
 
 ## Q5 — Odds, Log(Odds), and the Logit (5 points)
@@ -341,6 +377,22 @@ tibble(
 3. A logistic regression model outputs `.pred_yes = 0.20` for a specific customer. Convert this to log(odds) by hand (show the formula and calculation), and explain what it means that this log(odds) value is negative.
 
 *Write your answer here.*
+
+1. The response probability is about **20.1%**, so the odds of responding are **0.251**. In plain marketing language, this means there is about **1 customer who responds for every 4 customers who do not respond** (odds ≈ 1:4).
+
+2. Raw odds are not symmetric because they range from **0 to infinity**, while log(odds) transforms them to values centered around **0**. For example, probabilities of **0.05** and **0.95** have log(odds) of **-2.94** and **2.94**, respectively. This symmetry makes the relationship more suitable for a linear model because increases and decreases are treated evenly.
+
+3. For a predicted probability of **0.20**:
+
+\[
+\text{log(odds)} = \ln\left(\frac{p}{1-p}\right)
+= \ln\left(\frac{0.20}{0.80}\right)
+= \ln(0.25)
+\approx -1.386
+\]
+
+The negative log(odds) means the customer is **less likely to respond than not respond**, since the probability of responding is below 50%.
+
 
 ---
 
@@ -381,6 +433,12 @@ coef_tbl
 
 *Write your answer here.*
 
+1. Holding the other customer characteristics constant, each one-unit increase in `freq_12mo` is associated with **1.32 times the odds of responding**, or about a **32% increase** in response odds.
+
+2. Each additional day in `recency_days` multiplies the response odds by **0.827**, which is about a **17.3% decrease** in odds. This makes sense because customers who have not purchased or interacted recently are generally less engaged and less likely to respond to direct mail.
+
+3. Compared with Bronze customers, Silver customers have **1.03 times**, Gold customers have **1.13 times**, and Platinum customers have **1.57 times** the odds of responding. Therefore, Platinum is the strongest predictor: **Platinum customers have 1.57 times the odds of responding compared with Bronze customers.**
+
 ---
 
 ## Q7 — Logistic vs. Linear Regression (5 points)
@@ -400,6 +458,19 @@ tibble(
 3. Logistic regression uses **maximum likelihood** rather than **least squares** to fit the model. In plain English, what is maximum likelihood estimating — what is it trying to maximize and why?
 
 *Write your answer here.*
+
+1. Linear regression is inappropriate for a binary outcome because it can produce predicted probabilities below 0 or above 1. For example, starting from the roughly **20%** response rate, a linear model could predict a probability of **-0.05** for a low-scoring customer or **1.10** for a high-scoring customer, neither of which is possible; logistic regression keeps predictions between 0 and 1.
+
+2. When \(z = 0\), `plogis(0)` returns **0.50** because
+
+\[
+p = \frac{1}{1 + e^{-0}} = \frac{1}{2} = 0.5.
+\]
+
+This is mathematically necessary because zero log-odds means the odds are \(1:1\), so responding and not responding are equally likely.
+
+3. Maximum likelihood chooses the coefficients that make the outcomes actually observed in the data as probable as possible. In this case, it tries to assign high predicted probabilities to customers who responded and low predicted probabilities to customers who did not respond, selecting the coefficient values that maximize the combined likelihood of all those observed yes/no results.
+
 
 ---
 
@@ -454,6 +525,28 @@ tidy(mail_prep, number = 3) # normalization statistics
 
 *Write your answer here.*
 
+1. `step_impute_median()` should come before `step_log()` so missing numeric values are filled on their original scale before any transformation is applied. If the order were reversed, missing values would remain `NA` during the log step and would later be imputed using medians calculated on the logged scale, which could change the imputed and normalized output and may cause problems for preprocessing steps that require complete values.
+
+2. The value `meanlog = 10.8` refers to the mean of the **natural logarithm** of income, but the recipe converts income using a base-10 logarithm. Using the change-of-base formula,
+
+\[
+\log_{10}(x)=\frac{\ln(x)}{\ln(10)}
+\]
+
+so the expected transformed mean is
+
+\[
+\frac{10.8}{\ln(10)}
+=\frac{10.8}{2.3026}
+\approx 4.69.
+\]
+
+The `offset = 1` has almost no effect here because the income values are large.
+
+3. Including `customer_id` in the formula keeps it available for identifying and matching rows, while `update_role(customer_id, new_role = "ID")` prevents it from being used as a predictor. Without `update_role()`, the customer ID would be treated as a model input, potentially causing meaningless patterns, overfitting, or a very large number of dummy variables if the ID is categorical.
+
+
+
 ---
 
 ## Q9 — prep(), bake(), and Data Leakage (6 points)
@@ -485,6 +578,13 @@ bind_rows(
 
 *Write your answer here.*
 
+1. **Data leakage** occurs when information from the test set influences how the model or preprocessing steps are trained. `prep()` estimates values such as medians, means, standard deviations, and factor levels, so running it on `mail_test` allows the preprocessing pipeline to learn from data that should remain completely unseen until final evaluation.
+
+2. The normalization means differ because the training and test sets contain slightly different customers and therefore have different income distributions; here, the training-based mean is **4.69**, while the test-based mean is **4.68**. Even a small difference matters because using the test statistic contaminates the evaluation and makes the reported performance less representative of how the model will perform on truly new data.
+
+3. No, the leakage is not acceptable even when the measured performance difference is small. The test set is meant to provide an independent estimate of future performance, and using any information from it breaks that independence and can produce biased or overly favorable results.
+
+
 ---
 
 ## Q10 — Workflow and Regularization (6 points)
@@ -512,6 +612,13 @@ mail_fit |>
 
 *Write your answer here.*
 
+1. `mixture = 1` specifies **pure Lasso regularization**, which uses an L1 penalty. Unlike Ridge regression, which usually only shrinks coefficients toward zero, Lasso can reduce some coefficients to **exactly zero** and effectively remove those predictors from the model.
+
+2. The Lasso set the coefficients for predictors such as `avg_order_amt` and several `region` variables to zero, meaning they were not retained as useful predictors at the chosen penalty level. This automatic feature selection is helpful in marketing data with many potential predictors because it produces a simpler model and can reduce overfitting.
+
+3. A `workflow()` keeps the preprocessing recipe and model together so the same steps are applied consistently during training, testing, resampling, and future prediction. For example, it prevents accidentally calculating normalization statistics on the test set or applying different dummy-variable encoding to the training and test data.
+
+
 ---
 
 # Topic 4 — Model Evaluation & Resampling
@@ -529,14 +636,13 @@ binary outcomes: an unconstrained linear model can output values outside the ran
 :::
 
 ```{r q11-reg, eval=FALSE}
-# Fit a regression model predicting daily campaign revenue
 set.seed(999)
 marketing_split <- initial_split(marketing, prop = 0.80)
 marketing_train <- training(marketing_split)
 marketing_test <- testing(marketing_split)
 
 reg_rec <- recipe(
-  revenue ~ mark_spent + clicks + leads,
+  Revenue ~ Clicks + Leads,
   data = marketing_train
 ) |>
   step_normalize(all_numeric_predictors())
@@ -550,16 +656,16 @@ reg_preds <- augment(reg_fit, new_data = marketing_test)
 
 # Compute metrics
 reg_preds |>
-  metric_set(rmse, rsq, mae)(truth = revenue, estimate = .pred)
+  metric_set(rmse, rsq, mae)(truth = Revenue, estimate = .pred)
 
 # Add a "whale" campaign-day and see how metrics change
-whale <- tibble(revenue = 2800000, .pred = 200000)
+whale <- tibble(Revenue = 2800000, .pred = 200000)
 reg_preds_whale <- bind_rows(
-  reg_preds |> select(revenue, .pred),
+  reg_preds |> select(Revenue, .pred),
   whale
 )
 reg_preds_whale |>
-  metric_set(rmse, mae)(truth = revenue, estimate = .pred)
+  metric_set(rmse, mae)(truth = Revenue, estimate = .pred)
 ```
 
 1. Explain in plain English what **RMSE** measures. How is it different from **MAE**, and why does RMSE penalize large errors more?
@@ -567,6 +673,20 @@ reg_preds_whale |>
 3. If you were reporting model performance to a VP of Marketing who is trying to plan next month's marketing budget, which metric (RMSE, MAE, or R²) would you report, and why? Answer in 2–3 sentences.
 
 *Write your answer here.*
+
+1. **RMSE** measures the typical size of the model’s prediction errors in the same units as revenue, but it gives extra weight to large mistakes. **MAE** is the average absolute difference between actual and predicted revenue, treating each error proportionally; RMSE penalizes large errors more because the errors are squared before being averaged.
+
+2. RMSE increases from **$288,413 to $289,453**, an increase of about **0.36%**:
+
+\[
+\frac{289453-288413}{288413}\times 100 \approx 0.36\%
+\]
+
+MAE increases from **$188,322 to $188,539**, an increase of about **0.12%**. Therefore, **RMSE changes more** because the whale campaign’s very large prediction error is squared, giving it greater influence than it has on MAE.
+
+3. I would report **MAE** because it tells the VP that the model’s predictions are off by about **$188,322 on average**, which is directly interpretable for budgeting. MAE is also less distorted by an unusually large campaign than RMSE, while \(R^2\) describes explained variation rather than the expected error in dollars.
+
+
 
 ---
 
@@ -641,6 +761,14 @@ preds_low_threshold |>
 
 *Write your answer here.*
 
+
+1. The **false negatives are 94 customers**: the model predicted “no,” but they actually responded “yes.” In a direct-mail campaign, these are customers the company may choose not to contact even though they would have responded, creating an opportunity cost from lost sales or revenue.
+
+2. The model’s accuracy of **82.4%** is only about **2.4 percentage points higher** than an always-“no” model with roughly 80% accuracy. Accuracy alone hides the limited lift because the classes are imbalanced: the model’s sensitivity is only **22.3%**, meaning it identifies fewer than one-quarter of the actual responders and misses most of them.
+
+3. Lowering the threshold from 0.5 to 0.3 raises sensitivity from **22.3% to 48.8%**, so the campaign manager identifies more potential responders and reduces false negatives. However, precision falls from **69.2% to 47.2%**, meaning more nonresponders will also receive mail, increasing campaign costs and reducing the response rate among targeted customers.
+
+
 ---
 
 ## Q13 — ROC Curve and AUC (10 points)
@@ -665,6 +793,14 @@ auc_val
 3. A colleague proposes targeting only the customers in the **top 20%** of predicted probabilities (the highest `.pred_yes` scores). How would you use the ROC curve to estimate what sensitivity you would achieve at that targeting rate? Describe the process (no code required).
 
 *Write your answer here.*
+
+1. A single confusion matrix evaluates the model at only one classification threshold, while the ROC curve shows the tradeoff between sensitivity and false-positive rate across all possible thresholds. This gives a more complete view because it shows how model performance changes as the campaign becomes more or less aggressive in targeting customers.
+
+2. If we randomly select one customer who would respond and one who would not, the model assigns a higher predicted probability to the true responder **78.6% of the time**. An AUC of 0.5 represents random guessing because the model would rank the responder above the nonresponder only half the time.
+
+3. First, rank customers from highest to lowest predicted response probability and find the cutoff that includes the top **20%** of customers. Then locate the point on the ROC curve corresponding to that probability cutoff and read its sensitivity from the vertical axis; this is the estimated percentage of all actual responders captured by the campaign. The targeting rate should not be read directly as \(x=0.20\), because the ROC curve’s horizontal axis is the false-positive rate, not the percentage of all customers targeted.
+
+
 
 ---
 
@@ -704,11 +840,24 @@ collect_metrics(cv_results)
 
 *Write your answer here.*
 
+1. **Resubstitution** evaluates a model on the same data used to fit it, so the estimate is usually optimistic because the model has already learned patterns in those observations. Here, the gap is small: training AUC is **0.796** and held-out test AUC is **0.786**, a difference of only **0.010**, likely because Lasso regularization limits model complexity and reduces overfitting.
+
+2. In **10-fold cross-validation**, the training data are divided into 10 approximately equal folds. The model is trained on nine folds and evaluated on the remaining fold, repeating the process until every fold has served as the validation set; the 10 results are then averaged. This is more trustworthy than one train/test split because every observation is used for both training and validation, and the result depends less on one fortunate or unfortunate split.
+
+3. The `std_err` measures the uncertainty in the mean cross-validated performance estimate caused by variation across the 10 folds. For ROC AUC, the mean is **0.791** with a standard error of about **0.0105**, indicating how precisely the average AUC has been estimated; a single held-out AUC provides only one value and does not show how much performance might vary across different samples.
+
+
 ---
 
 ## Q15 — Comparing Resampling Methods and Model Flexibility (10 points)
 
 ```{r q15-flex, eval=FALSE}
+
+
+install.packages("ranger")
+library(ranger)
+
+
 # Compare 5-fold vs 10-fold CV
 set.seed(2024)
 folds_5 <- vfold_cv(mail_train2, v = 5, strata = responded)
@@ -767,6 +916,13 @@ bind_rows(
 
 *Write your answer here.*
 
+1. Decreasing from 10 folds to 5 folds would typically make the **standard error larger** because the reported mean is based on fewer performance estimates. In this output, the standard errors are nearly identical—**0.0105** for 10-fold CV and **0.0104** for 5-fold CV—so the tiny decrease is just sampling variation rather than a meaningful improvement in precision.
+
+2. The random forest has a much larger resubstitution gap: its training AUC is **0.997**, but its test AUC is **0.797**, producing a gap of **0.200**. Random forests are flexible enough to learn complex patterns and noise in the training data, while Lasso shrinks coefficients and sets some to zero, limiting complexity and producing a much smaller gap of about **0.009**.
+
+3. Comparing the models using training performance would be unfair because the more flexible random forest can fit the training observations almost perfectly, even when that performance does not transfer to new customers. The models should instead be compared using the **same held-out test set** or, preferably, their performance across the **same cross-validation folds**.
+
+
 ---
 
 # Bonus Question (+5 points) {.unnumbered}
@@ -775,17 +931,19 @@ bind_rows(
 
 A marketing analyst at a retail company runs the following code and reports:
 
-```r
-rf_fit <- fit(rf_wf, data = mail_data)   # Note: full dataset, not mail_train
-preds  <- augment(rf_fit, new_data = mail_data)
-roc_auc(preds, truth = responded, .pred_yes)
-# AUC = 0.99
-```
 
 "Our model achieves an AUC of 0.99 — nearly perfect performance! We should deploy this immediately to score all prospects for the next mailing."
 
 Identify **at least three distinct problems** with this analyst's approach and the conclusion they drew. For each problem, explain what went wrong and what the correct approach would be.
 
 *Write your answer here (3–5 sentences per problem).*
+
+1. **The model is evaluated on the same data used to train it.** The AUC of **0.996** is a resubstitution estimate, so it measures how well the random forest ranks observations it has already seen rather than new prospects. This is highly optimistic, especially because the earlier results showed that the random forest’s AUC fell from about **0.997 on training data to 0.797 on test data**. The correct approach is to estimate performance using cross-validation or an untouched test set before fitting the final model to the full dataset.
+
+2. **The analyst ignores overfitting and model flexibility.** Random forests can learn complicated relationships and noise in the training data, allowing nearly perfect training performance without equally strong performance on unseen customers. The large gap between training and test AUC is evidence that this model has overfit. Model complexity and hyperparameters should be selected through resampling, and the final reported performance should come from held-out data.
+
+3. **AUC alone is not enough to justify deployment.** AUC evaluates ranking performance across all possible classification thresholds, but it does not specify which customers should receive the mailing or account for mailing costs, expected profit, false positives, and false negatives. Before deployment, the analyst should select a threshold or targeting percentage using business costs and then report relevant measures such as sensitivity, precision, expected response rate, and campaign profit.
+
+4. **Immediate full deployment is premature.** Even a model with good held-out performance may perform differently on future prospects because customer behavior, campaign design, and market conditions can change. The company should first conduct a limited pilot or randomized campaign to verify that model-based targeting creates incremental value compared with the current strategy. Performance and data drift should then be monitored after deployment.
 
 ---
