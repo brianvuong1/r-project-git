@@ -1,0 +1,517 @@
+---
+title: "Reflection on Trees with Group Project Data"
+subtitle: "Analytics Objective: Predict whether a purchased item will be returned"
+author: "Brian V"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-expand: 1
+    toc-location: right-body
+    toc-title: "Contents"
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    code-overflow: wrap
+    theme: cosmo
+    highlight-style: github
+    df-print: paged
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  freeze: true  # Turn back on after the notebook renders cleanly
+---
+
+> This report is my Module 9 reflection on decision trees, applied to my
+> Research Objective 3 (RO3) data from our group's Shopify returns-prediction
+> project. Instructor prompts are reproduced in block quotes; my responses
+> follow directly underneath each one, per the submission instructions.
+
+# Analytics Objective (AO)
+
+> **Prompt:** State your AO (Analytics Objectives) for your project. If your
+> AO didn't involve machine learning (supervised or unsupervised learning),
+> please revise it so that the objective is appropriately stated for a
+> machine learning task. Further state how you will address the objectives.
+> Specifically describe: (a) supervised vs. unsupervised learning, (b) the
+> variables to be included and their roles (outcome vs. features), and (c)
+> the name of the broader category of machine learning methods (regression
+> vs. classification).
+
+**AO:** From the perspective of the business, we want to know: *before an
+order ships, how likely is this customer's purchase to come back as a
+return?* Answering that lets a retailer intervene proactively — flagging
+high-risk orders for extra quality checks, adjusting discount policy in
+categories that are prone to returns, or setting customer expectations up
+front — rather than only reacting to returns after they happen. Framed as an
+analytics objective: **predict whether a purchased item will be returned
+(`is_returned`) using product category, discount percentage, shipping cost,
+and customer rating, in order to identify the strongest drivers of return
+risk and estimate their downstream effect on net profit.** This AO already
+involved supervised learning in my Module 8 submission, so it did not need
+to be revised for this module — I'm simply extending the same objective with
+a new class of model (decision trees) instead of stating it from scratch.
+
+- **Learning type:** Supervised learning. `is_returned` is a known, labeled
+  outcome recorded for every one of the 60,000 historical orders, so the
+  models are trained on examples that already have a "right answer."
+- **Variables and roles:**
+
+| Variable | Role | Type | Description |
+|:---|:---|:---|:---|
+| `is_returned` | Outcome (DV) | Binary factor (No/Yes) | Whether the order was returned |
+| `product_category` | Feature (IV) | Categorical | Product line purchased |
+| `discount_percent` | Feature (IV) | Numeric | % discount applied to the order |
+| `shipping_cost` | Feature (IV) | Numeric | Logistics cost absorbed on the order |
+| `rating` | Feature (IV) | Numeric | Post-purchase satisfaction score (1-5) |
+
+- **Broader ML category:** **Classification.** The outcome is categorical
+  (returned vs. not returned) rather than a continuous number, so this is a
+  binary classification task, not a regression task — the same framing I
+  used in Module 8 with logistic regression, LDA, QDA, and KNN.
+
+# Choosing a Decision Tree Method
+
+> **Prompt:** Choose either of the two decision tree methods for your chosen
+> machine learning task (i.e., regression vs. classification — help me
+> choose): Classification Tree or Regression Tree.
+
+Since `is_returned` is a binary (Yes/No) outcome and not a continuous
+number, this AO calls for a **classification tree**, not a regression tree.
+Regression trees split the feature space to minimize the *sum of squared
+residuals* of a continuous target (e.g., predicting `profit` in dollars);
+classification trees instead split to minimize a measure of **node
+impurity** (Gini index or entropy) so that each resulting leaf is as
+"pure" as possible in terms of the class label. Because I want a predicted
+class (or predicted probability of return) rather than a predicted dollar
+amount, the classification tree is the correct tool here, and it keeps this
+module consistent with the classification framing I already established for
+RO3 in Module 8.
+
+::: {.callout-tip title="Why a tree at all, alongside logistic regression?"}
+Logistic regression assumes a linear relationship (on the log-odds scale)
+between each predictor and the outcome. A classification tree makes no such
+assumption — it can automatically capture an **interaction** like "high
+discount *and* low rating *and* Fashion category" without me having to
+specify that interaction term by hand. That is exactly the kind of pattern
+our RO3 hypothesis proposed, so trees are a natural next step.
+:::
+
+# Libraries and Data
+
+```{r}
+library(tidyverse)   # dplyr, ggplot2, lubridate, readr
+library(tidymodels)  # rsample, recipes, parsnip, workflows, yardstick, tune
+library(rpart.plot)  # visualizing a single decision tree
+library(baguette)    # bag_tree()
+library(ranger)      # random forest engine
+library(xgboost)     # boosted trees engine
+library(doParallel)  # parallel backend to speed up CV
+
+tidymodels_prefer()
+
+# Use multiple cores for cross-validation (leaves 1 core free)
+cl <- makePSOCKcluster(parallel::detectCores() - 1)
+registerDoParallel(cl)
+
+df <- read_csv("shopify_sales_dataset_ml_eda.csv")
+glimpse(df)
+```
+
+# Data Wrangling
+
+```{r}
+df <- df %>%
+  mutate(
+    order_date = ymd(order_date),
+    net_margin = (profit / revenue) * 100,
+    is_returned = factor(is_returned, levels = c(0, 1), labels = c("No", "Yes")),
+    product_category = as.factor(product_category),
+    customer_country = as.factor(customer_country)
+  )
+
+# Check for missing data
+sum(is.na(df))
+
+# Class balance -- returns remain the minority class
+df %>%
+  count(is_returned) %>%
+  mutate(pct = round(n / sum(n) * 100, 1))
+```
+
+::: {.callout-note title="Class imbalance, revisited"}
+As in Module 8, roughly 15% of orders are returned.[^imbalance] All splits
+below are stratified on `is_returned`, and I evaluate models on ROC AUC,
+sensitivity, and specificity together — not accuracy alone — since a model
+that predicts "No" for every order would still look ~85% accurate while
+being operationally useless.
+:::
+
+[^imbalance]: A tree-based model can actually handle imbalance a little more
+    gracefully than logistic regression in one respect: because splits are
+    chosen to reduce impurity locally, a tree can carve out a small, pure
+    "high risk" leaf even when the overall return rate is low, whereas a
+    single global logistic-regression boundary has to spread its
+    sensitivity across the whole feature space.
+
+# Machine Learning Process
+
+## Method Choice: Why a Decision Tree First
+
+I start with a single classification tree (via the `rpart` engine) as the
+baseline tree-based model for three reasons: (1) it is the most
+**interpretable** non-linear model available — the fitted tree can be drawn
+and read like a flowchart of business rules ("if `discount_percent` > 35 and
+`rating` < 3, predict Return"); (2) it requires almost **no preprocessing**
+— no dummy encoding or normalization is needed, since `rpart` splits factors
+and numeric variables directly; and (3) it gives me a natural baseline to
+compare against **tree ensembles** (bagging, random forest, boosting), which
+should outperform a single tree if the extra variance-reduction or
+bias-reduction machinery is actually buying us anything on this dataset.
+
+## Data Splitting
+
+```{r}
+set.seed(123)
+data_split <- initial_split(df, prop = 0.75, strata = is_returned)
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
+
+## Recipe Creation
+
+Tree-based models (`rpart`, `ranger`) split on raw factor levels and raw
+numeric values directly, so — unlike the logistic/LDA/QDA/KNN recipe from
+Module 8 — this recipe skips `step_dummy()` and `step_normalize()`. The one
+exception is **xgboost**, which needs a fully numeric input matrix, so I
+build a second recipe with dummy coding for that engine only.
+
+```{r}
+tree_recipe <- recipe(is_returned ~ product_category + discount_percent +
+                         shipping_cost + rating, data = train_data) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+boost_recipe <- tree_recipe %>%
+  step_dummy(all_nominal_predictors())
+```
+
+## Model Specification
+
+```{r}
+# Tree counts and times reduced significantly below to drastically improve Positron render speeds
+tree_spec <- decision_tree(cost_complexity = 0.01, tree_depth = 30, min_n = 20) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+bag_spec <- bag_tree() %>%
+  set_engine("rpart", times = 5) %>%           # 10 -> 5 for faster rendering
+  set_mode("classification")
+
+rf_spec <- rand_forest(trees = 50, mtry = 3, min_n = 10) %>%  # 200 -> 50 trees for faster rendering
+  set_engine("ranger", importance = "impurity", num.threads = parallel::detectCores() - 1) %>%
+  set_mode("classification")
+
+boost_spec <- boost_tree(trees = 50, tree_depth = 6, learn_rate = 0.05) %>%  # 200 -> 50 trees for faster rendering
+  set_engine("xgboost", nthread = parallel::detectCores() - 1) %>%
+  set_mode("classification")
+```
+
+## Workflows and Fitting
+
+```{r}
+tree_wf  <- workflow() %>% add_recipe(tree_recipe)  %>% add_model(tree_spec)
+bag_wf   <- workflow() %>% add_recipe(tree_recipe)  %>% add_model(bag_spec)
+rf_wf    <- workflow() %>% add_recipe(tree_recipe)  %>% add_model(rf_spec)
+boost_wf <- workflow() %>% add_recipe(boost_recipe) %>% add_model(boost_spec)
+
+tree_fit  <- fit(tree_wf,  data = train_data)
+bag_fit   <- fit(bag_wf,   data = train_data)
+rf_fit    <- fit(rf_wf,    data = train_data)
+boost_fit <- fit(boost_wf, data = train_data)
+```
+
+### Visualizing the Single Tree {#sec-tree-plot}
+
+```{r}
+#| label: fig-single-tree
+#| fig-cap: "Fitted classification tree for predicting is_returned"
+rpart.plot(extract_fit_engine(tree_fit), roundint = FALSE, type = 3,
+           extra = 104, box.palette = "Blues")
+```
+
+@fig-single-tree shows the actual decision rules the tree learned. Reading
+the top split tells us which single variable most reduces impurity first —
+this is usually `discount_percent` or `rating`, consistent with our RO3
+hypothesis that heavy discounting combined with low satisfaction is the
+main driver of returns.
+
+## Model Evaluation (Test Set)
+
+```{r}
+model_fits <- list(
+  "Single Tree"   = tree_fit,
+  "Bagged Trees"  = bag_fit,
+  "Random Forest" = rf_fit,
+  "Boosted Trees" = boost_fit
+)
+
+test_preds <- map(model_fits, augment, new_data = test_data)
+
+test_metrics <- map_dfr(test_preds, \(preds) {
+  bind_rows(
+    roc_auc(preds, truth = is_returned, .pred_Yes, event_level = "second"),
+    accuracy(preds, truth = is_returned, estimate = .pred_class),
+    sens(preds, truth = is_returned, estimate = .pred_class, event_level = "second"),
+    spec(preds, truth = is_returned, estimate = .pred_class, event_level = "second")
+  )
+}, .id = "model")
+
+test_metrics %>%
+  select(model, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate)
+```
+
+::: {.panel-tabset}
+## Single Tree
+```{r}
+conf_mat(test_preds[["Single Tree"]], truth = is_returned, estimate = .pred_class)
+```
+
+## Bagged Trees
+```{r}
+conf_mat(test_preds[["Bagged Trees"]], truth = is_returned, estimate = .pred_class)
+```
+
+## Random Forest
+```{r}
+conf_mat(test_preds[["Random Forest"]], truth = is_returned, estimate = .pred_class)
+```
+
+## Boosted Trees
+```{r}
+conf_mat(test_preds[["Boosted Trees"]], truth = is_returned, estimate = .pred_class)
+```
+:::
+
+**Interpretation:** *[Fill in with your actual rendered numbers.]* In
+general, expect the single tree to have the lowest AUC of the four — it is
+prone to high variance and tends to overfit its training splits. Bagging
+should reduce that variance by averaging many bootstrapped trees; the random
+forest typically improves on plain bagging further by decorrelating trees
+through random feature subsetting at each split; and boosting often edges
+out the random forest on AUC because it builds trees sequentially to correct
+prior errors, at the cost of being the slowest to fit and the most sensitive
+to overfitting if `trees` or `learn_rate` are not tuned carefully.
+
+## Alternative Methods Tried
+
+The four models above — a single classification tree, bagged trees, a
+random forest, and boosted trees — *are* the alternative methods used to try
+to improve on the baseline single tree, per the assignment prompt. Bagging
+and random forests both attack the single tree's **high variance** problem
+by averaging over many trees fit to resampled data (random forests add
+random feature subsetting to further decorrelate those trees), while
+boosting instead attacks **bias**, building shallow trees sequentially so
+each new tree focuses on the previous ensemble's mistakes.
+
+## Cross-Validation Comparison
+
+```{r}
+set.seed(123)
+folds <- vfold_cv(train_data, v = 3, strata = is_returned)  # 5 -> 3 folds for much faster rendering
+
+wf_list <- list(
+  "Single Tree"   = tree_wf,
+  "Bagged Trees"  = bag_wf,
+  "Random Forest" = rf_wf,
+  "Boosted Trees" = boost_wf
+)
+
+cv_metrics <- metric_set(roc_auc, accuracy, sens, spec)
+cv_control <- control_resamples(allow_par = TRUE)  # let doParallel spread the fits
+
+cv_results <- map_dfr(wf_list, \(wf) {
+  fit_resamples(wf, resamples = folds, metrics = cv_metrics, control = cv_control) %>%
+    collect_metrics()
+}, .id = "model")
+
+cv_results %>%
+  select(model, .metric, mean, std_err) %>%
+  pivot_wider(names_from = .metric, values_from = c(mean, std_err))
+```
+
+**Interpretation:** *[Fill in once rendered.]* Compare the `mean` AUC
+column across models and check whether the `std_err` bands overlap. If the
+random forest and boosted trees are within roughly one standard error of
+each other, that's evidence the two ensembles are performing comparably and
+the simpler-to-tune one (usually the random forest) is the more practical
+choice for deployment. If the single tree's CV AUC is noticeably below the
+ensembles, that confirms the single tree was overfitting to idiosyncrasies
+of the training split rather than learning generalizable rules — the
+expected result, since averaging/boosting exist precisely to fix that
+weakness.
+
+## Feature Importance
+
+```{r}
+#| label: fig-rf-importance
+#| fig-cap: "Random forest feature importance (impurity-based)"
+
+# Extracting feature importance using base ggplot2 instead of the vip package
+rf_obj <- extract_fit_engine(rf_fit)
+
+importance_df <- tibble(
+  feature = names(rf_obj$variable.importance),
+  importance = rf_obj$variable.importance
+) %>%
+  arrange(desc(importance)) %>%
+  slice_head(n = 10)
+
+ggplot(importance_df, aes(x = reorder(feature, importance), y = importance)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Feature Importance for Predicting is_returned",
+       x = "Feature", y = "Importance (Impurity)") +
+  theme_minimal()
+```
+
+**Interpretation:** *[Fill in once rendered.]* Compare this ranking to the
+Module 8 logistic-regression coefficients and to our original RO3
+hypothesis (heavy discounting + low rating, concentrated in Fashion and
+Footwear, drives returns). If `discount_percent` and `rating` again come out
+on top, that's convergent evidence across two very different model families
+— logistic regression's linear odds ratios and the random forest's
+impurity-based importance — which strengthens the case that these two
+variables are genuine drivers of return risk rather than an artifact of one
+particular model.
+
+# Decision Tree Pruning
+
+> **Prompt:** Using the `fit_tree_cp()` function from Section 4.5 (or write
+> your own), fit decision trees across `cost_complexity` values of
+> `c(0.0001, 0.001, 0.005, 0.01, 0.05, 0.10)`. Plot train vs. test AUC across
+> all `cp` values. At what `cp` value does test AUC peak? What happens to
+> train AUC at that same value? At the optimal `cp`, how many leaf nodes
+> does the tree have? In plain English, explain to a marketing manager why a
+> tree with 200 leaf nodes might perform worse on new customers than a tree
+> with 15 leaf nodes, even though it was more accurate on the training data.
+
+## Fitting Trees Across `cost_complexity` Values
+
+```{r}
+fit_tree_cp <- function(cp, train, test, recipe) {
+  spec <- decision_tree(cost_complexity = cp) %>%
+    set_engine("rpart") %>%
+    set_mode("classification")
+
+  wf <- workflow() %>% add_recipe(recipe) %>% add_model(spec)
+  fitted <- fit(wf, data = train)
+
+  train_auc <- augment(fitted, new_data = train) %>%
+    roc_auc(truth = is_returned, .pred_Yes, event_level = "second") %>%
+    pull(.estimate)
+
+  test_auc <- augment(fitted, new_data = test) %>%
+    roc_auc(truth = is_returned, .pred_Yes, event_level = "second") %>%
+    pull(.estimate)
+
+  n_leaves <- fitted %>%
+    extract_fit_engine() %>%
+    pluck("frame") %>%
+    filter(var == "<leaf>") %>%
+    nrow()
+
+  tibble(cost_complexity = cp, train_auc = train_auc,
+         test_auc = test_auc, n_leaves = n_leaves)
+}
+
+cp_values <- c(0.0001, 0.001, 0.005, 0.01, 0.05, 0.10)
+
+cp_results <- map_dfr(cp_values, fit_tree_cp,
+                       train = train_data, test = test_data,
+                       recipe = tree_recipe)
+
+cp_results
+```
+
+## Train vs. Test AUC Across `cp` Values
+
+```{r}
+#| label: fig-cp-auc
+#| fig-cap: "Train vs. test AUC across cost_complexity (cp) values"
+cp_results %>%
+  pivot_longer(cols = c(train_auc, test_auc),
+               names_to = "set", values_to = "auc") %>%
+  mutate(set = recode(set, train_auc = "Train", test_auc = "Test")) %>%
+  ggplot(aes(x = cost_complexity, y = auc, color = set)) +
+  geom_line() +
+  geom_point(size = 2) +
+  scale_x_log10() +
+  labs(x = "cost_complexity (log scale)", y = "ROC AUC", color = NULL,
+       title = "Train vs. Test AUC Across Pruning Levels") +
+  theme_minimal()
+```
+
+@fig-cp-auc typically shows the familiar pruning pattern for a single tree:
+**train AUC decreases monotonically as `cp` grows** (a larger `cp` forces a
+smaller, more heavily pruned tree, which necessarily fits the training data
+less closely), while **test AUC rises to a peak at some intermediate `cp`
+and then falls off** once the tree becomes too shallow to capture real
+signal. *[Report your actual peak `cp` value and both AUCs here once
+rendered — e.g., "test AUC peaks at cp = ___ (test AUC = ___), while train
+AUC at that same cp is ___, only slightly higher than the peak test AUC."]*
+
+## Leaf Nodes at the Optimal `cp`
+
+```{r}
+best_cp <- cp_results %>% slice_max(test_auc, n = 1) %>% pull(cost_complexity)
+best_cp
+
+cp_results %>% filter(cost_complexity == best_cp) %>% pull(n_leaves)
+```
+
+*[State the resulting leaf count here, e.g., "At the optimal cp of ___, the
+pruned tree has ___ leaf nodes — far fewer than the ~200+ leaves an
+essentially unpruned tree (cp = 0.0001) would produce."]*
+
+## Explaining Overfitting to a Marketing Manager
+
+> A tree with 200 leaf nodes has essentially memorized the training
+> customers rather than learning general rules about *why* people return
+> items. Each of those 200 tiny leaves might represent a rule as specific as
+> "customers in Germany who bought Footwear with exactly a 27% discount and
+> a 3.4 rating on a Tuesday" — a pattern that fit our historical data almost
+> perfectly by chance, but that has no real predictive power for a *new*
+> customer who doesn't match that razor-thin combination. A tree with 15
+> leaf nodes, by contrast, is forced to group customers using broader,
+> more stable patterns — "high discount and low rating," for instance —
+> that are far more likely to hold up for future orders. So while the
+> 200-leaf tree looks more accurate when we check it against the same data
+> it was trained on, the 15-leaf tree usually wins on genuinely new orders,
+> because it learned the underlying *signal* in customer behavior instead of
+> memorizing *noise* specific to our training sample. This is exactly why
+> we don't just pick the tree with the highest training accuracy — we pick
+> the one with the best **test** performance.
+
+::: {.callout-important title="Business takeaway"}
+Overfitting isn't just a modeling technicality — an over-fit return-risk
+model would flag the wrong customers, wasting review-team effort on
+one-off historical quirks instead of catching the genuinely risky
+discount/rating combinations that recur order after order.
+:::
+
+```{r}
+# Shut down the parallel cluster now that all model fitting is done
+stopCluster(cl)
+registerDoSEQ()
+```
+
+
+
+## Appendix
+
+Github Repo: https://github.com/brianvuong1/r-project-git
+
