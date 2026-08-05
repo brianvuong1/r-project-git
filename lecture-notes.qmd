@@ -1,0 +1,184 @@
+---
+title: "Reflection on Ensembles: Bagging and Boosting"
+subtitle: "Understanding the Algorithms"
+author: "Brian"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-expand: 1
+    toc-location: right-body
+    toc-title: "Contents"
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+    highlight-style: github
+    df-print: paged
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  freeze: true  # Turn back on after the notebook renders cleanly
+---
+
+# Introduction
+
+**Prompt:** *For each video listed in this module, create study notes by summarizing the concepts, defining key terminology, and stating key takeaways. Organize your essay using headings and subheadings.*
+
+This document reflects on the module covering ensemble learning methods, with a focus on **bagging** and **boosting**, and in particular the **XGBoost** algorithm. Below, I summarize the core concepts from lecture, define key terminology, and close with my own takeaways and connections to related methods.
+
+> "XGBoost is a big Machine Learning algorithm with lots of parts — it is designed to be used with large, compacted data sets."
+
+That framing from lecture sets the tone for this reflection: XGBoost is not a single trick but a system of interlocking design choices (initial predictions, tree structure, regularization, and computational shortcuts) that together make gradient boosting fast and scalable.
+
+# Study Notes: XGBoost Fundamentals {#sec-fundamentals}
+
+## What XGBoost Is
+
+XGBoost ("Extreme Gradient Boosting") extends ordinary gradient boosting by replacing off-the-shelf regression trees with a purpose-built tree structure (the **XGBoost Tree**) and by adding regularization and pruning steps that reduce overfitting on large datasets.
+
+## The Initial Prediction
+
+Every XGBoost model starts with an initial prediction before any trees are built.
+
+- By default, this initial prediction is **0.5**, regardless of whether the task is regression or classification.
+- It can be set to something else — for example, the observed probability of an effective dosage in the training data — but 0.5 is the default starting point.
+- Graphically, this initial prediction corresponds to a thick black horizontal line running through the data.
+
+**Residuals** are then computed as the difference between the observed values and this predicted value. Residuals tell us how good (or bad) the initial prediction is, and they become the target that the first tree is built to explain.
+
+## Regular Trees vs. XGBoost Trees
+
+| Feature | Standard Gradient Boosting | XGBoost |
+|---|---|---|
+| Tree type | Off-the-shelf regression tree | XGBoost Tree (custom structure) |
+| Starting point | Recursive splitting on variance/impurity | Every tree starts as a single leaf |
+| Regularization | Not built-in by default | Built-in via $\lambda$ and $\gamma$ |
+| Split evaluation | Variance reduction | Similarity Score and Gain |
+
+Each XGBoost tree starts out as a single leaf, and **all residuals** are initially routed into that one leaf before any splitting occurs.
+
+# Study Notes: XGBoost for Regression {#sec-regression}
+
+## Similarity Score and Gain
+
+The **Similarity Score** for a node is calculated as:
+
+$$
+\text{Similarity Score} = \frac{\left(\sum \text{Residuals}\right)^2}{n + \lambda}
+$$
+
+where $n$ is the number of residuals in the node and $\lambda$ is the regularization parameter (see @sec-lambda).
+
+For example, with four residuals in a leaf, we plug those four values into the numerator and use 4 in the denominator. Because residuals can be positive or negative, some of them **cancel each other out** when summed — this is part of why the similarity score can shrink even when there are several residuals present.
+
+**Gain** measures the improvement from splitting a node, and is computed as the sum of the similarity scores of the resulting left and right leaves minus the similarity score of the node before the split.
+
+## Pruning with Gamma {#sec-pruning}
+
+After a tree is grown, XGBoost prunes it using a user-defined **Tree Complexity Parameter**, $\gamma$ (gamma):
+
+1. Calculate the difference between the Gain at the lowest branch in the tree and $\gamma$.
+2. **If Gain − $\gamma$ is negative**, the branch is removed (pruned).
+3. **If Gain − $\gamma$ is positive**, the branch is kept.
+
+::: {.callout-note}
+## Pruning rule of thumb
+Negative difference → prune the branch.
+Positive difference → keep the branch.
+This is evaluated bottom-up, starting at the lowest branches in the tree.
+:::
+
+## Regularization with Lambda {#sec-lambda}
+
+$\lambda$ is a **regularization parameter**[^lambda-note] intended to reduce the model's sensitivity to any single observation. Increasing $\lambda$ shrinks similarity scores, which in turn:
+
+- Makes Gain values smaller,
+- Makes it more likely that Gain − $\gamma$ is negative,
+- Leads to **more pruning** and a simpler, less overfit tree.
+
+[^lambda-note]: Regularization parameters like $\lambda$ trade a small amount of bias for a reduction in variance — the model becomes less reactive to noise in any one observation.
+
+# Study Notes: XGBoost for Classification {#sec-classification}
+
+## Initial Prediction and Log(Odds)
+
+For classification, XGBoost also starts with an initial prediction (0.5 by default), but this value must be converted to a **log(odds)** value before it can be used in the boosting process. This is done by taking the log of both sides of the odds equation:
+
+$$
+\log\left(\frac{p}{1-p}\right)
+$$
+
+## Building Classification Trees
+
+::: {.panel-tabset}
+
+## Regression
+
+- Similarity Score uses summed residuals over $n + \lambda$
+- Gain compares child vs. parent similarity scores
+- Pruned using Gain − $\gamma$
+
+## Classification
+
+- Initial prediction converted to log(odds)
+- Similarity Score and Gain still drive splitting decisions
+- Pruning again compares Gain − $\gamma$: negative → prune, positive → keep
+- $\lambda = 0$ results in **more pruning**, since it shrinks similarity scores and produces smaller leaf output values
+
+:::
+
+As shown above, the mechanics of splitting (similarity score, gain, pruning against $\gamma$) are the same across regression and classification — the main difference is the log(odds) transformation applied to the initial prediction and leaf outputs.
+
+## Cover and Minimum Child Weight
+
+- **Cover** is the denominator of the similarity score in the classification case, and it relates to the *minimum number of residuals permitted in a leaf*.
+- This concept is closely tied to the `min_child_weight` hyperparameter in practice — a leaf with too little "cover" won't be split further.
+
+# Study Notes: Algorithmic and Computational Considerations {#sec-computation}
+
+## Greedy Algorithm
+
+XGBoost uses a **Greedy Algorithm** for finding splits: it commits to the locally best decision at each step *without looking ahead* to check whether that choice is optimal over the long run of the tree. This trades global optimality for speed.
+
+## Quantile Sketch for Candidate Thresholds
+
+To make splitting fast on large datasets, XGBoost does not test every possible threshold. Instead:
+
+- Data is divided into **quantiles**, and these quantile boundaries become the candidate split thresholds.
+- The first threshold is defined by the first quantile, the second threshold by the second quantile, and so on.
+- The **sum of weights is kept equal across each quantile**, which is what makes this an approximate (rather than exhaustive) search — this is sometimes called a *weighted quantile sketch*.
+
+## Hardware Considerations
+
+One of the more surprising lecture points was about *why* XGBoost is fast on large data — it's partly a hardware story:
+
+- Every CPU contains **cache memory**, which the CPU can access faster than other memory in the system.
+- The system is also connected to **main memory (RAM)** and the **hard drive**, both of which are progressively slower than cache.
+- XGBoost is engineered to make heavy use of cache-friendly operations (like the block structure used for the quantile sketch above) so that repeated computations during tree building stay as close to the CPU as possible, minimizing trips to slower memory.
+
+::: {.callout-tip}
+## Why this matters
+This is a good example of an algorithm being designed not just for statistical performance, but for *computational* performance — squeezing speed out of the memory hierarchy, not just out of the math.
+:::
+
+::: {.callout-warning}
+## Common misconception
+The Greedy Algorithm's speed advantage does **not** mean XGBoost ignores overfitting — pruning via $\gamma$ and shrinkage via $\lambda$ (see @sec-pruning and @sec-lambda) are what keep greedy, fast splitting from producing an overfit tree.
+:::
+
+# Reflection
+
+## Key Takeaways
+
+- XGBoost builds on gradient boosting by using a custom tree structure (the XGBoost Tree) rather than a standard regression tree.
+- Similarity Score and Gain are the two quantities that drive every splitting decision, in both regression and classification.
+- Pruning (via $\gamma$) and regularization (via $\lambda$) are what keep a greedy, locally-optimal algorithm from overfitting.
+- Classification differs from regression mainly in the log(odds) transformation of the initial prediction, not in the underlying splitting mechanics.
+- A meaningful part of XGBoost's real-world speed advantage comes from computational engineering (quantile sketching, cache-aware memory access), not just the statistical formulation.
+
+## Connections to Bagging (Random Forests)
+
+Where bagging methods like Random Forests build many trees **independently and in parallel** on bootstrapped samples, then average their predictions to reduce variance, XGBoost builds trees **sequentially**, with each new tree explicitly targeting the residuals left behind by the trees before it. This is the core distinction between bagging and boosting: bagging reduces variance through averaging independent models, while boosting reduces bias (and, through $\lambda$/$\gamma$, controls variance) by iteratively correcting errors.
