@@ -1,0 +1,376 @@
+---
+title: "Reflection on Ensembles, Model Comparisons, and Interpretations with Group Project Data"
+subtitle: "Analytics Objective: Predict whether a purchased item will be returned"
+author: "Brian V"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-expand: 1
+    toc-location: right-body
+    toc-title: "Contents"
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    theme: cosmo
+    highlight-style: github
+    df-print: paged
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  freeze: true
+---
+
+# Analytics Objective
+
+> **Prompt:** State your AO (Analytics Objectives) for your project. If your AO didn't involve machine learning (supervised or unsupervised learning), please revise it so that the objective is appropriately stated for a machine learning task. What are the variables to be included and their roles (i.e., outcome vs. features)? Name of the broader category of machine learning methods (i.e., regression vs. classification).
+
+**AO:** From a customer-experience standpoint, this project asks: *what makes a purchase likely to come back?* Predicting `is_returned` lets a retailer flag risky orders **before** they're finalized — using the two levers a customer or merchant can still act on at checkout (`discount_percent`, `shipping_cost`) — and treats post-purchase `rating` as an early-warning monitoring signal rather than something to be optimized directly.
+
+- **Learning type:** Supervised learning — `is_returned` is a known, labeled outcome for every historical order.
+- **Outcome (DV):** `is_returned` (binary: 0 = kept, 1 = returned)
+- **Features (IVs):**
+
+| Variable | Role | Type | Actionability |
+|:---|:---|:---|:---|
+| `product_category` | Predictor | Categorical | Structural (assortment) |
+| `discount_percent` | Predictor | Numeric | **Pre-purchase lever** |
+| `shipping_cost` | Predictor | Numeric | **Pre-purchase lever** |
+| `rating` | Predictor | Numeric | **Post-purchase monitoring signal**[^1] |
+
+[^1]: `rating` is included as a predictor for predictive completeness, but because it's only observed *after* a purchase (often after delivery), it functions operationally as a monitoring/QA signal rather than something merchandising can adjust pre-sale.
+
+- **Broader ML category:** Classification (binary). All four candidate models below — Lasso logistic regression, decision tree, random forest, and XGBoost — are binary classifiers trained on this same outcome and feature set.
+
+# Bagging and Boosting Methods
+
+Bagging (bootstrap aggregating) trains many trees independently and in parallel on bootstrapped resamples of the training data, then averages their predictions — random forest is the canonical example, adding a second layer of randomness by restricting each split to a random subset of predictors (`mtry`). This mainly reduces **variance**: a single deep tree overfits noisy rows, but averaging many decorrelated trees smooths that out.
+
+Boosting instead builds trees **sequentially**, where each new tree is fit to the residual error of the ensemble so far, and predictions are combined as a weighted sum rather than a simple average. This targets **bias**: it lets the model chase the pattern the previous trees missed, controlled by a learning rate (`learn_rate`) that keeps any single tree from overcorrecting. XGBoost is the boosting implementation used here.
+
+For return prediction, this distinction matters practically: if returns are driven by a few dominant, fairly linear effects (e.g., "high discount → more returns"), a bagged/RF approach and a boosted approach should land close together. If the true relationship involves interactions — e.g., a high discount is only risky *in combination with* a low rating or a specific category — boosting has more room to outperform, since it can chain trees to carve out that interaction directly.
+
+# Machine Learning Process
+
+> **Prompt:** Set up your QMD file with appropriate libraries and data and go through the entire machine learning process for your AO. Run at least three ML methods, one from each category: a regression/classification-focused method, a decision tree with tuned hyperparameters, a random forest, and an XGBoost.
+
+## Libraries and Data
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(discrim)
+library(DALEX)
+library(DALEXtra)
+library(shapviz)
+library(doParallel)
+
+tidymodels_prefer()
+
+df <- read_csv("shopify_sales_dataset_ml_eda.csv")
+glimpse(df)
+```
+
+## Data Wrangling
+
+```{r}
+df <- df %>%
+  mutate(
+    order_date = ymd(order_date),
+    net_margin = (profit / revenue) * 100,
+    is_returned = factor(is_returned, levels = c(0, 1), labels = c("No", "Yes")),
+    product_category = as.factor(product_category)
+  )
+
+sum(is.na(df))
+
+df %>%
+  count(is_returned) %>%
+  mutate(pct = round(n / sum(n) * 100, 1))
+```
+
+::: {.callout-note title="Class imbalance carried over from M08"}
+Returns remain roughly 15% of orders. As in the prior module, all splits and CV folds are stratified on `is_returned`, and `roc_auc` — not accuracy — is the comparison metric throughout, since a model that predicts "No" for every order would score ~85% accuracy while being operationally useless.
+:::
+
+## Data Splitting and Resampling
+
+```{r}
+set.seed(123)
+data_split <- initial_split(df, prop = 0.75, strata = is_returned)
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+
+cv_folds <- vfold_cv(train_data, v = 10, strata = is_returned)
+```
+
+## Recipe Creation
+
+```{r}
+returns_recipe <- recipe(is_returned ~ product_category + discount_percent +
+                            shipping_cost + rating, data = train_data) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_nzv(all_predictors())
+```
+
+## Model Specifications and Tuning
+
+::: {.callout-important title="Tuning grid size — a documented tradeoff"}
+Grids below are intentionally small (3–5 combinations per model)[^2] to keep render time manageable with 10-fold CV on 60,000 rows. This trades some tuning thoroughness for feasibility; a production tuning pass would widen these ranges.
+:::
+
+[^2]: Consistent with the fast-render conventions established in M09 (`trees = 50` for ensembles, `doParallel` for parallelization), extended here to small tuning grids rather than the full grid a production run would use.
+
+```{r}
+doParallel::registerDoParallel(cores = parallel::detectCores() - 1)
+```
+
+::: {.panel-tabset}
+
+## Lasso Logistic Regression
+
+```{r}
+lasso_spec <- logistic_reg(penalty = tune(), mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("classification")
+
+lasso_wf <- workflow() %>% add_recipe(returns_recipe) %>% add_model(lasso_spec)
+
+lasso_grid <- grid_regular(penalty(range = c(-4, -0.5)), levels = 5)
+
+lasso_tune <- tune_grid(
+  lasso_wf,
+  resamples = cv_folds,
+  grid = lasso_grid,
+  metrics = metric_set(roc_auc)
+)
+
+best_lasso <- select_best(lasso_tune, metric = "roc_auc")
+lasso_final_wf <- finalize_workflow(lasso_wf, best_lasso)
+
+lasso_cv_res <- fit_resamples(
+  lasso_final_wf,
+  resamples = cv_folds,
+  metrics = metric_set(roc_auc, accuracy, sens, spec)
+)
+```
+
+The Lasso penalty shrinks weak-signal coefficients toward zero:
+
+$$
+\hat{\beta}_{\text{lasso}} = \arg\min_{\beta} \left\{ -\ell(\beta) + \lambda \sum_{j=1}^{p} |\beta_j| \right\}
+$$
+
+where $\ell(\beta)$ is the logistic log-likelihood and $\lambda$ is the tuned `penalty`.
+
+## Decision Tree (Tuned)
+
+```{r}
+tree_spec <- decision_tree(cost_complexity = tune(), tree_depth = tune()) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+tree_wf <- workflow() %>% add_recipe(returns_recipe) %>% add_model(tree_spec)
+
+tree_grid <- grid_regular(cost_complexity(), tree_depth(range = c(2, 8)), levels = 2)
+
+tree_tune <- tune_grid(
+  tree_wf,
+  resamples = cv_folds,
+  grid = tree_grid,
+  metrics = metric_set(roc_auc)
+)
+
+best_tree <- select_best(tree_tune, metric = "roc_auc")
+tree_final_wf <- finalize_workflow(tree_wf, best_tree)
+
+tree_cv_res <- fit_resamples(
+  tree_final_wf,
+  resamples = cv_folds,
+  metrics = metric_set(roc_auc, accuracy, sens, spec)
+)
+```
+
+## Random Forest
+
+```{r}
+rf_spec <- rand_forest(mtry = tune(), min_n = tune(), trees = 50) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification")
+
+rf_wf <- workflow() %>% add_recipe(returns_recipe) %>% add_model(rf_spec)
+
+rf_grid <- grid_regular(mtry(range = c(2, 4)), min_n(range = c(5, 20)), levels = 2)
+
+rf_tune <- tune_grid(
+  rf_wf,
+  resamples = cv_folds,
+  grid = rf_grid,
+  metrics = metric_set(roc_auc)
+)
+
+best_rf <- select_best(rf_tune, metric = "roc_auc")
+rf_final_wf <- finalize_workflow(rf_wf, best_rf)
+```
+
+## XGBoost
+
+```{r}
+xgb_spec <- boost_tree(trees = 50, tree_depth = tune(), learn_rate = tune()) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+
+xgb_wf <- workflow() %>% add_recipe(returns_recipe) %>% add_model(xgb_spec)
+
+xgb_grid <- grid_regular(tree_depth(range = c(2, 6)), learn_rate(range = c(-2, -0.5)), levels = 2)
+
+xgb_tune <- tune_grid(
+  xgb_wf,
+  resamples = cv_folds,
+  grid = xgb_grid,
+  metrics = metric_set(roc_auc)
+)
+
+best_xgb <- select_best(xgb_tune, metric = "roc_auc")
+xgb_final_wf <- finalize_workflow(xgb_wf, best_xgb)
+xgb_final_fit <- fit(xgb_final_wf, data = train_data)
+```
+
+:::
+
+```{r}
+doParallel::stopImplicitCluster()
+```
+
+## 10-Fold CV Model Comparison {#sec-cv-comparison}
+
+```{r}
+lasso_roc <- collect_metrics(lasso_cv_res) %>% filter(.metric == "roc_auc") %>% mutate(model = "Lasso LR")
+tree_roc  <- collect_metrics(tree_cv_res)  %>% filter(.metric == "roc_auc") %>% mutate(model = "Decision Tree")
+rf_roc    <- show_best(rf_tune,  metric = "roc_auc", n = 1) %>% mutate(model = "Random Forest")
+xgb_roc   <- show_best(xgb_tune, metric = "roc_auc", n = 1) %>% mutate(model = "XGBoost")
+
+cv_comparison <- bind_rows(lasso_roc, tree_roc, rf_roc, xgb_roc) %>%
+  select(model, mean, std_err, n) %>%
+  arrange(desc(mean))
+
+cv_comparison
+```
+
+> **Prompt:** Which model achieves the highest CV roc_auc? Is the difference from the second-best model larger than one standard error? Do you expect tree-based methods to outperform the regression-focused models? Why or why not? Did the model performance in CV roc_auc confirm your expectations? What would the result tell you about the relationships in this dataset — and which model would you recommend for deployment?
+
+**[FILL IN AFTER RENDER]** Read the top row of `cv_comparison` for the winning model and its `mean`/`std_err`. Compare `mean` of rank 1 vs. rank 2: if `mean_1 - mean_2 > std_err_1 + std_err_2` (roughly one-SE-band non-overlap), the lead is meaningful; otherwise treat them as statistically comparable.
+
+My working hypothesis going in: with only four numeric/categorical predictors and no obvious deep interactions specified in the recipe, I'd expect **tree-based methods (RF/XGBoost) to have a modest edge over Lasso LR at best**, not a dominant one — logistic regression already handles the roughly-monotonic relationships (higher discount → higher return odds) reasonably well, so boosting's main advantage would come from any interaction between `discount_percent` and `rating` or `product_category` that a linear model can't capture on its own. **[FILL IN AFTER RENDER: state whether this expectation held.]**
+
+**Deployment recommendation:** **[FILL IN AFTER RENDER]** — if the top model's lead isn't larger than one SE over Lasso LR, recommend Lasso LR for deployment on parsimony/interpretability grounds (odds ratios are directly explainable to stakeholders); if a tree-based model's lead is real, recommend it and note the interpretability cost is offset by the VIP/PDP/SHAP analysis below.
+
+# Interpretation of the Best-Performing Model
+
+> **Prompt:** Interpret the results of the best-performing model to explain the impact of features on the outcome variable for your client — Variable Importance Plot, PDP, SHAP. From the charts above, what recommendations would you make to the client?
+
+Per the interpretation approach established for this project, XGBoost is treated as the focal model here, since boosting is best positioned to surface the discount × rating interaction discussed in @sec-cv-comparison. **If a different model wins the CV comparison by more than one standard error, swap `xgb_final_fit` for that model's finalized fit below before rendering.**
+
+## Variable Importance {#sec-vip}
+
+`vip` is not supported in this environment, so importance is built manually from the fitted `xgboost` engine object, consistent with the M09 approach.
+
+```{r}
+xgb_engine <- extract_fit_engine(xgb_final_fit)
+importance_matrix <- xgboost::xgb.importance(model = xgb_engine)
+
+ggplot(importance_matrix, aes(x = reorder(Feature, Gain), y = Gain)) +
+  geom_col(fill = "darkorange") +
+  coord_flip() +
+  labs(title = "XGBoost Variable Importance (Gain)",
+       x = "Feature", y = "Gain") +
+  theme_minimal()
+```
+
+## Partial Dependence Plots (PDP)
+
+```{r}
+set.seed(123)
+sample_idx <- sample(nrow(train_data), 500)
+explain_sample <- train_data[sample_idx, ]
+
+xgb_explainer <- explain_tidymodels(
+  xgb_final_fit,
+  data = explain_sample %>% select(product_category, discount_percent, shipping_cost, rating),
+  y = as.numeric(explain_sample$is_returned) - 1,
+  label = "XGBoost",
+  verbose = FALSE
+)
+
+pdp_discount <- model_profile(xgb_explainer, variables = "discount_percent", N = 500)
+plot(pdp_discount)
+
+pdp_shipping <- model_profile(xgb_explainer, variables = "shipping_cost", N = 500)
+plot(pdp_shipping)
+```
+
+## SHAP Values
+
+Aggregated across a 500-observation sample with `B = 25` Monte-Carlo permutations per observation, consistent with the interpretation approach set for this project.
+
+```{r}
+set.seed(123)
+shap_sample <- train_data[sample(nrow(train_data), 500), ]
+
+shap_results <- purrr::map_dfr(1:nrow(shap_sample), function(i) {
+  sp <- predict_parts(
+    xgb_explainer,
+    new_observation = shap_sample[i, ],
+    type = "shap",
+    B = 25
+  )
+  as.data.frame(sp) %>% mutate(obs_id = i)
+})
+
+shap_summary <- shap_results %>%
+  group_by(variable_name) %>%
+  summarise(mean_abs_shap = mean(abs(contribution)), .groups = "drop") %>%
+  arrange(desc(mean_abs_shap))
+
+ggplot(shap_summary, aes(x = reorder(variable_name, mean_abs_shap), y = mean_abs_shap)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Mean |SHAP Value| by Feature (N = 500, B = 25)",
+       x = "Feature", y = "Mean |SHAP value|") +
+  theme_minimal()
+```
+
+## Client Recommendations
+
+The SHAP analysis (N = 500, B = 25) ranks feature impact on return probability as
+**shipping cost > discount percentage > rating > product category** — a somewhat
+different picture than the exploratory return-rate-by-category chart alone
+suggested.
+
+- **Shipping cost is the dominant driver.** As a pre-purchase, operationally
+  controllable cost, this points to a logistics review rather than a pricing
+  one: identify the shipping cost band(s) where the PDP shows return
+  probability accelerating, and treat orders above that threshold as
+  higher-risk — for example, flagging them for carrier/delivery-speed review
+  or proactive customer communication about delivery expectations, since slow
+  or expensive shipping is a known return trigger independent of the product
+  itself.
+- **Discount percentage is the second lever, but a secondary one.** A flat
+  discount cap is less supported by this ranking than a *combined* rule —
+  e.g., tightening discount thresholds specifically on orders that also carry
+  high shipping cost, since the two together likely compound risk.
+- **Rating remains a post-purchase monitoring signal, not a pre-sale lever.**
+  Its middling SHAP rank still supports using a rolling average rating per
+  product as an early-warning flag for quality review, but it should not
+  be the primary lever the client acts on before a sale.
+- **Product category ranks lowest once shipping cost, discount, and rating
+  are controlled for.** This is a meaningful finding on its own: the earlier
+  EDA bar chart (return rate by category) likely reflected categories that
+  happen to *correlate* with higher shipping costs or heavier discounting,
+  rather than category itself driving returns. Practically, this means the
+  client shouldn't restrict returns policy by category — the risk is in the
+  cost/discount structure of the order, not the type of product.

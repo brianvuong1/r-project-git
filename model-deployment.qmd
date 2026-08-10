@@ -1,0 +1,236 @@
+---
+title: "W10 - Machine Learning Deployment"
+subtitle: "Predicting Product Returns with a Boosted Tree Classifier"
+author: "Brian Vuong"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    embed-resources: true
+    theme: cosmo
+    code-fold: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: true
+---
+
+# 1. Project & Data Overview
+
+## 1.1 Project Description
+
+This dashboard deploys the boosted tree model developed for **RO3** of our group's Shopify sales project: predicting whether a purchased item will be returned (`is_returned`). Discount percentage and shipping cost are framed as **pre-purchase levers** a retailer can adjust before an order ships; customer rating is framed as a **post-purchase monitoring signal**. Product category sets the baseline risk context.
+
+The calculator below lets you enter a hypothetical order's characteristics and see the model's predicted return probability instantly, entirely in your browser — no server, no API calls.
+
+## 1.2 Data Description
+
+- **Source:** `shopify_sales_dataset_ml_eda.csv`, 60,000 Shopify orders
+- **Outcome:** `is_returned` (binary; \~15% positive class)
+- **Predictors used by this model:**
+  - `product_category` — categorical, 7 levels
+  - `discount_percent` — numeric, 0-100
+  - `shipping_cost` — numeric, dollars
+  - `rating` — numeric, 1.0-5.0
+
+# 2. Model Deployment
+
+## 2.1 R Code — Training & Export
+
+```{r}
+#| label: setup
+#| cache: true
+
+library(tidyverse)
+library(tidymodels)
+library(xgboost)
+library(jsonlite)
+
+tidymodels_prefer()
+
+df <- read_csv("shopify_sales_dataset_ml_eda.csv") %>%
+  mutate(
+    is_returned      = factor(is_returned, levels = c(0, 1), labels = c("No", "Yes")),
+    product_category = as.factor(product_category)
+  )
+```
+
+```{r}
+#| label: fit-model
+#| cache: true
+
+set.seed(123)
+data_split <- initial_split(df, prop = 0.75, strata = is_returned)
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+
+# No step_normalize() -- unnecessary for tree-based models, cut for speed
+returns_recipe <- recipe(
+    is_returned ~ product_category + discount_percent + shipping_cost + rating,
+    data = train_data
+  ) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+# Fast-render spec: fixed trees = 50, no tuning
+boost_spec <- boost_tree(trees = 50) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+
+boost_wf  <- workflow() %>% add_recipe(returns_recipe) %>% add_model(boost_spec)
+boost_fit <- fit(boost_wf, data = train_data)
+
+# Quick holdout check -- single split, no resampling, kept lightweight
+boost_preds <- augment(boost_fit, new_data = test_data)
+roc_auc(boost_preds, truth = is_returned, .pred_Yes, event_level = "second")
+```
+
+```{r}
+#| label: export-for-js
+#| cache: true
+
+booster <- extract_fit_engine(boost_fit)
+tree_dump <- xgb.dump(booster, dump_format = "json")
+
+baked_cols <- returns_recipe %>%
+  prep() %>%
+  bake(new_data = NULL) %>%
+  select(-is_returned) %>%
+  colnames()
+
+category_levels <- levels(df$product_category)
+
+# Build one JSON blob with everything the browser calculator needs
+model_payload <- list(
+  trees      = lapply(tree_dump, jsonlite::fromJSON, simplifyVector = FALSE),
+  features   = baked_cols,
+  categories = category_levels
+)
+payload_json <- jsonlite::toJSON(model_payload, auto_unbox = TRUE)
+```
+
+```{r}
+#| label: inject-data
+#| echo: false
+#| results: asis
+
+cat(paste0('<script>\nconst modelPayload = ', payload_json, ';\n</script>'))
+```
+
+*(Below is the same training code shown again as a non-executed reference block, per assignment instructions — the executable version above is what actually produced the deployed model.)*
+
+```{r}
+returns_recipe <- recipe(
+    is_returned ~ product_category + discount_percent + shipping_cost + rating,
+    data = train_data
+  ) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+boost_spec <- boost_tree(trees = 50) %>%
+  set_engine("xgboost") %>%
+  set_mode("classification")
+
+boost_wf  <- workflow() %>% add_recipe(returns_recipe) %>% add_model(boost_spec)
+boost_fit <- fit(boost_wf, data = train_data)
+```
+
+## 2.2 Interactive Calculator (Live in Browser)
+
+```{=html}
+<div style="max-width:500px; font-family:sans-serif;">
+  <label>Product Category</label><br>
+  <select id="categoryInput" style="width:100%; margin-bottom:10px;"></select>
+
+  <label>Discount % (<span id="discountVal">20</span>)</label><br>
+  <input type="range" id="discountInput" min="0" max="100" value="20" style="width:100%; margin-bottom:10px;">
+
+  <label>Shipping Cost $ (<span id="shippingVal">8</span>)</label><br>
+  <input type="range" id="shippingInput" min="0" max="50" step="0.5" value="8" style="width:100%; margin-bottom:10px;">
+
+  <label>Customer Rating (<span id="ratingVal">3.5</span>)</label><br>
+  <input type="range" id="ratingInput" min="1" max="5" step="0.1" value="3.5" style="width:100%; margin-bottom:10px;">
+
+  <div style="font-size:1.4em; margin-top:1em;">
+    Predicted return probability: <b><span id="probOut">--</span>%</b>
+  </div>
+  <div style="width:100%; background:#eee; border-radius:6px; height:20px; margin-top:0.5em;">
+    <div id="probBar" style="width:0%; background:#2e7d32; height:100%; border-radius:6px;"></div>
+  </div>
+</div>
+
+<script>
+function scoreTree(node, features) {
+  if ("leaf" in node) return node.leaf;
+  const val = features[node.split] ?? 0;
+  const nextId = val < node.split_condition ? node.yes : node.no;
+  const next = node.children.find(c => c.nodeid === nextId);
+  return scoreTree(next, features);
+}
+
+function buildFeatureVector(category, discount, shipping, rating) {
+  const f = {};
+  for (const name of modelPayload.features) f[name] = 0;
+  f["discount_percent"] = discount;
+  f["shipping_cost"] = shipping;
+  f["rating"] = rating;
+  const dummyCol = modelPayload.features.find(n => n === `product_category_${category}`);
+  if (dummyCol) f[dummyCol] = 1;
+  return f;
+}
+
+function updateCalculator() {
+  const category = document.getElementById("categoryInput").value;
+  const discount = parseFloat(document.getElementById("discountInput").value);
+  const shipping = parseFloat(document.getElementById("shippingInput").value);
+  const rating = parseFloat(document.getElementById("ratingInput").value);
+
+  document.getElementById("discountVal").textContent = discount;
+  document.getElementById("shippingVal").textContent = shipping;
+  document.getElementById("ratingVal").textContent = rating;
+
+  const features = buildFeatureVector(category, discount, shipping, rating);
+  const rawScore = modelPayload.trees.reduce((sum, t) => sum + scoreTree(t, features), 0);
+  const prob = 1 / (1 + Math.exp(-rawScore));
+
+  document.getElementById("probOut").textContent = (prob * 100).toFixed(1);
+  const bar = document.getElementById("probBar");
+  bar.style.width = (prob * 100).toFixed(1) + "%";
+  bar.style.background = prob > 0.5 ? "#c0392b" : "#2e7d32";
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const select = document.getElementById("categoryInput");
+  modelPayload.categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
+  ["categoryInput", "discountInput", "shippingInput", "ratingInput"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateCalculator);
+  });
+  updateCalculator();
+});
+</script>
+```
+
+## 2.3 Experiment Log
+
+*\[Fill in after interacting with the live calculator above. Suggested scenarios to test — note the predicted probability for each, then compare against `predict(boost_fit, ..., type = "prob")` in R on the same inputs to confirm the JS calculator matches the R model within rounding.\]*
+
+| Scenario | Category | Discount % | Shipping \$ | Rating | Predicted P(Return) |
+|------------|------------|------------|------------|------------|------------|
+| Low risk | Electronics | 5 | 5 | 4.8 | *\[fill in\]* |
+| High discount, low rating | Fashion | 60 | 10 | 1.8 | *\[fill in\]* |
+| High shipping cost | Footwear | 20 | 35 | 3.5 | *\[fill in\]* |
+| Baseline / average order | Accessories | 20 | 8 | 3.5 | *\[fill in\]* |
+
+**Observations:** *\[Does the gap between the low-risk and high-discount/ low-rating scenarios support the RO3 hypothesis that high discount + low rating drives returns? Does the JS calculator's output match R's predict() closely enough to trust the deployed version?\]*
+
+## 2.4 Deployed Model on the Web
+
+Published via
