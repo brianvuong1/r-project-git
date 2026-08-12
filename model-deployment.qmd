@@ -15,7 +15,7 @@ execute:
   echo: true
   warning: false
   message: false
-  freeze: true
+  freeze: false
 ---
 
 # 1. Project & Data Overview
@@ -42,7 +42,6 @@ The calculator below lets you enter a hypothetical order's characteristics and s
 
 ```{r}
 #| label: setup
-#| cache: true
 
 library(tidyverse)
 library(tidymodels)
@@ -60,7 +59,6 @@ df <- read_csv("shopify_sales_dataset_ml_eda.csv") %>%
 
 ```{r}
 #| label: fit-model
-#| cache: true
 
 set.seed(123)
 data_split <- initial_split(df, prop = 0.75, strata = is_returned)
@@ -90,7 +88,6 @@ roc_auc(boost_preds, truth = is_returned, .pred_Yes, event_level = "second")
 
 ```{r}
 #| label: export-for-js
-#| cache: true
 
 booster <- extract_fit_engine(boost_fit)
 tree_dump <- xgb.dump(booster, dump_format = "json")
@@ -120,9 +117,10 @@ payload_json <- jsonlite::toJSON(model_payload, auto_unbox = TRUE)
 cat(paste0('<script>\nconst modelPayload = ', payload_json, ';\n</script>'))
 ```
 
-*(Below is the same training code shown again as a non-executed reference block, per assignment instructions — the executable version above is what actually produced the deployed model.)*
 
 ```{r}
+#| eval: false
+
 returns_recipe <- recipe(
     is_returned ~ product_category + discount_percent + shipping_cost + rating,
     data = train_data
@@ -220,7 +218,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 ## 2.3 Experiment Log
 
-*\[Fill in after interacting with the live calculator above. Suggested scenarios to test — note the predicted probability for each, then compare against `predict(boost_fit, ..., type = "prob")` in R on the same inputs to confirm the JS calculator matches the R model within rounding.\]*
 
 | Scenario | Category | Discount % | Shipping \$ | Rating | Predicted P(Return) |
 |------------|------------|------------|------------|------------|------------|
@@ -233,4 +230,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 ## 2.4 Deployed Model on the Web
 
-Published via
+Published via Githib Pages
