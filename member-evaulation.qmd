@@ -1,0 +1,88 @@
+---
+title: "Group Member Evaluation Form"
+subtitle: "CPP Farm Store Omnichannel & Ecommerce Project"
+author: "Brian Vuong"
+date: today
+format:
+  html:
+    toc: false
+    theme: cosmo
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tibble)
+library(knitr)
+```
+
+## Evaluator Information
+
+**Name:** Brian Vuong
+
+**Date:** `r format(Sys.Date(), "%B %d, %Y")`
+
+**Group Name / Project Name:** CPP Farm Store — Omnichannel & Ecommerce Consulting Project
+
+---
+
+## Instructions
+
+Please evaluate your group members (including yourself) on a 1–100% scale. If a member contributed their fair share to the group project, give them 100%. If a member did not do their fair share, assign a percentage less than 100%. If a member contributed significantly above and beyond, they may be identified as MVP.
+
+---
+
+## Member Evaluation
+
+```{r}
+#| label: member-evaluation
+
+member_eval <- tribble(
+  ~`Member Name`,        ~`Grade (%)`, ~`MVP`,
+  "Brian Vuong (self)",  100,          "No",
+  "Kevin Bachez",        100,          "No",
+  "Ron Stephen Sabilla", 100,          "No",
+  "Leeann",              100,          "No",
+  "Alexa Bueno",         100,          "No"
+)
+
+kable(
+  member_eval,
+  caption = "Group Member Contribution Evaluation"
+)
+```
+
+---
+
+## Comments on Contributions
+
+**Brian Vuong (self):**
+Owned the project Limitations, Importance of Research, and Analytical Objective 3. Formulated the methodological and scope limitations, defined the core business value and strategic importance of conducting this research, and completed the analysis and reporting for Analytical Objective 3.
+
+**Kevin Bachez:**
+Owned the Research Objectives, Recommendations, and Analytical Objective 5. Formulated the primary and secondary research objectives, synthesized key analysis insights into actionable final recommendations, and completed the execution and findings for Analytical Objective 5.
+
+**Ron Stephen Sabilla:**
+Owned the Problem Definition and Analytical Objective 1. Defined the core business problem and strategic challenges, and led the initial analysis required to fulfill Analytical Objective 1.
+
+**Leeann:**
+Owned the Population Sample section and Analytical Objective 4. Defined the target population characteristics, sampling criteria, and sample size methodology, while executing the data analysis and key takeaways for Analytical Objective 4.
+
+**Alexa Bueno:**
+Owned the Sample Characteristics, Key Findings, and Analytical Objective 2. Synthesized the demographic and behavioral characteristics of the sample, summarized the overarching project findings, and spearheaded the evaluation for Analytical Objective 2.
+
+---
+
+*(Use additional space above if needed — comments should justify any grade below 100%.)*
+
+## Appendix
+
+Published Report: (<https://brianvuong1.github.io/retail-marketing/evaulation-group-member.html>)
+
+Github Repo: (<https://github.com/brianvuong1/retail-marketing>)
