@@ -1,0 +1,10 @@
+name: model-deployment
+title:
+username: ibm-6540-project
+account: ibm-6540-project
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17693939
+bundleId: 12401495
+url: https://ibm-6540-project.shinyapps.io/model-deployment/
+version: 1
