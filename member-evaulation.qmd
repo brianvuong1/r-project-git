@@ -48,7 +48,7 @@ member_eval <- tribble(
   "Brian Vuong (self)",  100,          "No",
   "Kevin Bachez",        100,          "No",
   "Ron Stephen Sabilla", 100,          "No",
-  "Leeann",              100,          "No",
+  "Leeann",              100,          "Yes",
   "Alexa Bueno",         100,          "No"
 )
 
@@ -83,6 +83,6 @@ Owned the Sample Characteristics, Key Findings, and Analytical Objective 2. Synt
 
 ## Appendix
 
-Published Report: (<https://brianvuong1.github.io/retail-marketing/evaulation-group-member.html>)
+Published Report: (<https://brianvuong1.github.io/r-project-git/member-evaulation.html>)
 
-Github Repo: (<https://github.com/brianvuong1/retail-marketing>)
+Github Repo: (<https://github.com/brianvuong1/r-project-git>)
